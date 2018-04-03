@@ -1,0 +1,463 @@
+Terminals unused in grammar
+
+   STRINGLIT
+
+
+Grammar
+
+    0 $accept: program $end
+
+    1 program: input
+
+    2 input: %empty
+    3      | input line
+
+    4 line: EVERYTHING
+    5     | '(' innerParentheses ')'
+    6     | IDENTIFIER '(' innerParentheses ')'
+    7     | IDENTIFIER EVERYTHING
+    8     | '{' input '}'
+    9     | section
+
+   10 section: OMITGOOD innerBlock ENDIF
+   11        | OMITBAD innerBlock ENDIF
+
+   12 innerBlock: %empty
+   13           | nonEmptyInnerBlock
+
+   14 nonEmptyInnerBlock: nonEmptyInnerBlock validInnerBlock
+   15                   | validInnerBlock
+
+   16 validInnerBlock: EVERYTHING
+   17                | '(' innerParentheses ')'
+   18                | IDENTIFIER '(' innerParentheses ')'
+   19                | IDENTIFIER EVERYTHING
+   20                | '{' innerBlock '}'
+
+   21 innerParentheses: %empty
+   22                 | nonEmptyInnerParentheses
+
+   23 nonEmptyInnerParentheses: EVERYTHING
+   24                         | nonEmptyInnerParentheses EVERYTHING
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 5 6 17 18
+')' (41) 5 6 17 18
+'{' (123) 8 20
+'}' (125) 8 20
+error (256)
+OMITGOOD (258) 10
+OMITBAD (259) 11
+ENDIF (260) 10 11
+IDENTIFIER (261) 6 7 18 19
+STRINGLIT (262)
+EVERYTHING (263) 4 7 16 19 23 24
+
+
+Nonterminals, with rules where they appear
+
+$accept (13)
+    on left: 0
+program (14)
+    on left: 1, on right: 0
+input (15)
+    on left: 2 3, on right: 1 3 8
+line (16)
+    on left: 4 5 6 7 8 9, on right: 3
+section (17)
+    on left: 10 11, on right: 9
+innerBlock (18)
+    on left: 12 13, on right: 10 11 20
+nonEmptyInnerBlock (19)
+    on left: 14 15, on right: 13 14
+validInnerBlock (20)
+    on left: 16 17 18 19 20, on right: 14 15
+innerParentheses (21)
+    on left: 21 22, on right: 5 6 17 18
+nonEmptyInnerParentheses (22)
+    on left: 23 24, on right: 22 24
+
+
+State 0
+
+    0 $accept: . program $end
+
+    $default  reduce using rule 2 (input)
+
+    program  go to state 1
+    input    go to state 2
+
+
+State 1
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 3
+
+
+State 2
+
+    1 program: input .
+    3 input: input . line
+
+    OMITGOOD    shift, and go to state 4
+    OMITBAD     shift, and go to state 5
+    IDENTIFIER  shift, and go to state 6
+    EVERYTHING  shift, and go to state 7
+    '('         shift, and go to state 8
+    '{'         shift, and go to state 9
+
+    $default  reduce using rule 1 (program)
+
+    line     go to state 10
+    section  go to state 11
+
+
+State 3
+
+    0 $accept: program $end .
+
+    $default  accept
+
+
+State 4
+
+   10 section: OMITGOOD . innerBlock ENDIF
+
+    IDENTIFIER  shift, and go to state 12
+    EVERYTHING  shift, and go to state 13
+    '('         shift, and go to state 14
+    '{'         shift, and go to state 15
+
+    $default  reduce using rule 12 (innerBlock)
+
+    innerBlock          go to state 16
+    nonEmptyInnerBlock  go to state 17
+    validInnerBlock     go to state 18
+
+
+State 5
+
+   11 section: OMITBAD . innerBlock ENDIF
+
+    IDENTIFIER  shift, and go to state 12
+    EVERYTHING  shift, and go to state 13
+    '('         shift, and go to state 14
+    '{'         shift, and go to state 15
+
+    $default  reduce using rule 12 (innerBlock)
+
+    innerBlock          go to state 19
+    nonEmptyInnerBlock  go to state 17
+    validInnerBlock     go to state 18
+
+
+State 6
+
+    6 line: IDENTIFIER . '(' innerParentheses ')'
+    7     | IDENTIFIER . EVERYTHING
+
+    EVERYTHING  shift, and go to state 20
+    '('         shift, and go to state 21
+
+
+State 7
+
+    4 line: EVERYTHING .
+
+    $default  reduce using rule 4 (line)
+
+
+State 8
+
+    5 line: '(' . innerParentheses ')'
+
+    EVERYTHING  shift, and go to state 22
+
+    $default  reduce using rule 21 (innerParentheses)
+
+    innerParentheses          go to state 23
+    nonEmptyInnerParentheses  go to state 24
+
+
+State 9
+
+    8 line: '{' . input '}'
+
+    $default  reduce using rule 2 (input)
+
+    input  go to state 25
+
+
+State 10
+
+    3 input: input line .
+
+    $default  reduce using rule 3 (input)
+
+
+State 11
+
+    9 line: section .
+
+    $default  reduce using rule 9 (line)
+
+
+State 12
+
+   18 validInnerBlock: IDENTIFIER . '(' innerParentheses ')'
+   19                | IDENTIFIER . EVERYTHING
+
+    EVERYTHING  shift, and go to state 26
+    '('         shift, and go to state 27
+
+
+State 13
+
+   16 validInnerBlock: EVERYTHING .
+
+    $default  reduce using rule 16 (validInnerBlock)
+
+
+State 14
+
+   17 validInnerBlock: '(' . innerParentheses ')'
+
+    EVERYTHING  shift, and go to state 22
+
+    $default  reduce using rule 21 (innerParentheses)
+
+    innerParentheses          go to state 28
+    nonEmptyInnerParentheses  go to state 24
+
+
+State 15
+
+   20 validInnerBlock: '{' . innerBlock '}'
+
+    IDENTIFIER  shift, and go to state 12
+    EVERYTHING  shift, and go to state 13
+    '('         shift, and go to state 14
+    '{'         shift, and go to state 15
+
+    $default  reduce using rule 12 (innerBlock)
+
+    innerBlock          go to state 29
+    nonEmptyInnerBlock  go to state 17
+    validInnerBlock     go to state 18
+
+
+State 16
+
+   10 section: OMITGOOD innerBlock . ENDIF
+
+    ENDIF  shift, and go to state 30
+
+
+State 17
+
+   13 innerBlock: nonEmptyInnerBlock .
+   14 nonEmptyInnerBlock: nonEmptyInnerBlock . validInnerBlock
+
+    IDENTIFIER  shift, and go to state 12
+    EVERYTHING  shift, and go to state 13
+    '('         shift, and go to state 14
+    '{'         shift, and go to state 15
+
+    $default  reduce using rule 13 (innerBlock)
+
+    validInnerBlock  go to state 31
+
+
+State 18
+
+   15 nonEmptyInnerBlock: validInnerBlock .
+
+    $default  reduce using rule 15 (nonEmptyInnerBlock)
+
+
+State 19
+
+   11 section: OMITBAD innerBlock . ENDIF
+
+    ENDIF  shift, and go to state 32
+
+
+State 20
+
+    7 line: IDENTIFIER EVERYTHING .
+
+    $default  reduce using rule 7 (line)
+
+
+State 21
+
+    6 line: IDENTIFIER '(' . innerParentheses ')'
+
+    EVERYTHING  shift, and go to state 22
+
+    $default  reduce using rule 21 (innerParentheses)
+
+    innerParentheses          go to state 33
+    nonEmptyInnerParentheses  go to state 24
+
+
+State 22
+
+   23 nonEmptyInnerParentheses: EVERYTHING .
+
+    $default  reduce using rule 23 (nonEmptyInnerParentheses)
+
+
+State 23
+
+    5 line: '(' innerParentheses . ')'
+
+    ')'  shift, and go to state 34
+
+
+State 24
+
+   22 innerParentheses: nonEmptyInnerParentheses .
+   24 nonEmptyInnerParentheses: nonEmptyInnerParentheses . EVERYTHING
+
+    EVERYTHING  shift, and go to state 35
+
+    $default  reduce using rule 22 (innerParentheses)
+
+
+State 25
+
+    3 input: input . line
+    8 line: '{' input . '}'
+
+    OMITGOOD    shift, and go to state 4
+    OMITBAD     shift, and go to state 5
+    IDENTIFIER  shift, and go to state 6
+    EVERYTHING  shift, and go to state 7
+    '('         shift, and go to state 8
+    '{'         shift, and go to state 9
+    '}'         shift, and go to state 36
+
+    line     go to state 10
+    section  go to state 11
+
+
+State 26
+
+   19 validInnerBlock: IDENTIFIER EVERYTHING .
+
+    $default  reduce using rule 19 (validInnerBlock)
+
+
+State 27
+
+   18 validInnerBlock: IDENTIFIER '(' . innerParentheses ')'
+
+    EVERYTHING  shift, and go to state 22
+
+    $default  reduce using rule 21 (innerParentheses)
+
+    innerParentheses          go to state 37
+    nonEmptyInnerParentheses  go to state 24
+
+
+State 28
+
+   17 validInnerBlock: '(' innerParentheses . ')'
+
+    ')'  shift, and go to state 38
+
+
+State 29
+
+   20 validInnerBlock: '{' innerBlock . '}'
+
+    '}'  shift, and go to state 39
+
+
+State 30
+
+   10 section: OMITGOOD innerBlock ENDIF .
+
+    $default  reduce using rule 10 (section)
+
+
+State 31
+
+   14 nonEmptyInnerBlock: nonEmptyInnerBlock validInnerBlock .
+
+    $default  reduce using rule 14 (nonEmptyInnerBlock)
+
+
+State 32
+
+   11 section: OMITBAD innerBlock ENDIF .
+
+    $default  reduce using rule 11 (section)
+
+
+State 33
+
+    6 line: IDENTIFIER '(' innerParentheses . ')'
+
+    ')'  shift, and go to state 40
+
+
+State 34
+
+    5 line: '(' innerParentheses ')' .
+
+    $default  reduce using rule 5 (line)
+
+
+State 35
+
+   24 nonEmptyInnerParentheses: nonEmptyInnerParentheses EVERYTHING .
+
+    $default  reduce using rule 24 (nonEmptyInnerParentheses)
+
+
+State 36
+
+    8 line: '{' input '}' .
+
+    $default  reduce using rule 8 (line)
+
+
+State 37
+
+   18 validInnerBlock: IDENTIFIER '(' innerParentheses . ')'
+
+    ')'  shift, and go to state 41
+
+
+State 38
+
+   17 validInnerBlock: '(' innerParentheses ')' .
+
+    $default  reduce using rule 17 (validInnerBlock)
+
+
+State 39
+
+   20 validInnerBlock: '{' innerBlock '}' .
+
+    $default  reduce using rule 20 (validInnerBlock)
+
+
+State 40
+
+    6 line: IDENTIFIER '(' innerParentheses ')' .
+
+    $default  reduce using rule 6 (line)
+
+
+State 41
+
+   18 validInnerBlock: IDENTIFIER '(' innerParentheses ')' .
+
+    $default  reduce using rule 18 (validInnerBlock)
