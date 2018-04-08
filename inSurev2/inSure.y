@@ -45,68 +45,140 @@ void yyerror(char *s);
 %%
 
 primary_expression
-	: IDENTIFIER
-	| constant
-	| string
-	| '(' expression ')'
-	| generic_selection
+	: IDENTIFIER {
+		$$.str = newStr("%s", $1.str);
+	}
+	| constant {
+		$$.str = newStr("%s", $1.str);
+	}
+	| string {
+		$$.str = newStr("%s", $1.str);
+	}
+	| '(' expression ')' {
+		$$.str = newStr("(%s)", $2.str);
+	}
+	| generic_selection {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 constant
-	: I_CONSTANT		/* includes character_constant */
-	| F_CONSTANT
-	| ENUMERATION_CONSTANT	/* after it has been defined as such */ {printf("YAY!\n");}
+	: I_CONSTANT		/* includes character_constant */ {
+		$$.str = newStr("%s", $1.str);
+	}
+	| F_CONSTANT {
+		$$.str = newStr("%s", $1.str);
+	}
+	| ENUMERATION_CONSTANT	/* after it has been defined as such */ {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 enumeration_constant		/* before it has been defined as such */
-	: IDENTIFIER {add_type($1.str, ENUMERATION_CONSTANT);}
+	: IDENTIFIER {
+		add_type($1.str, ENUMERATION_CONSTANT);
+
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 string
-	: STRING_LITERAL
-	| FUNC_NAME
+	: STRING_LITERAL {
+		$$.str = newStr("%s", $1.str);
+	}
+	| FUNC_NAME {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 generic_selection
-	: GENERIC '(' assignment_expression ',' generic_assoc_list ')'
+	: GENERIC '(' assignment_expression ',' generic_assoc_list ')' {
+		$$.str = newStr("%s(%s,%s)", $1.str, $3.str, $5.str);
+	}
 	;
 
 generic_assoc_list
-	: generic_association
-	| generic_assoc_list ',' generic_association
+	: generic_association {
+		$$.str = newStr("%s", $1.str);
+	}
+	| generic_assoc_list ',' generic_association {
+		$$.str = newStr("%s, $s", $1.str, $3.str);
+	}
 	;
 
 generic_association
-	: type_name ':' assignment_expression
-	| DEFAULT ':' assignment_expression
+	: type_name ':' assignment_expression {
+		$$.str = newStr("%s: %s", $1.str, $3.str);
+	}
+	| DEFAULT ':' assignment_expression {
+		$$.str = newStr("%s: %s", $1.str, $3.str);
+	}
 	;
 
 postfix_expression
-	: primary_expression
-	| postfix_expression '[' expression ']'
-	| postfix_expression '(' ')'
-	| postfix_expression '(' argument_expression_list ')'
-	| postfix_expression '.' IDENTIFIER
-	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP
-	| postfix_expression DEC_OP
-	| '(' type_name ')' '{' initializer_list '}'
-	| '(' type_name ')' '{' initializer_list ',' '}'
+	: primary_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| postfix_expression '[' expression ']' {
+		$$.str = newStr("%s[%s]", $1.str, $3.str);
+	}
+	| postfix_expression '(' ')' {
+		$$.str = newStr("%s()", $1.str);
+	}
+	| postfix_expression '(' argument_expression_list ')' {
+		$$.str = newStr("%s(%s)", $1.str, $3.str);
+	}
+	| postfix_expression '.' IDENTIFIER {
+		$$.str = newStr("%s.%s", $1.str, $3.str);
+	}
+	| postfix_expression PTR_OP IDENTIFIER {
+		$$.str = newStr("%s%s%s", $1.str, $2.str, $3.str);
+	}
+	| postfix_expression INC_OP {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| postfix_expression DEC_OP {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| '(' type_name ')' '{' initializer_list '}' {
+		$$.str = newStr("(%s) { %s }", $2.str, $5.str);
+	}
+	| '(' type_name ')' '{' initializer_list ',' '}' {
+		$$.str = newStr("(%s) { %s, }", $2.str, $5.str);
+	}
 	;
 
 argument_expression_list
-	: assignment_expression
-	| argument_expression_list ',' assignment_expression
+	: assignment_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| argument_expression_list ',' assignment_expression {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 unary_expression
-	: postfix_expression
-	| INC_OP unary_expression
-	| DEC_OP unary_expression
-	| unary_operator cast_expression
-	| SIZEOF unary_expression
-	| SIZEOF '(' type_name ')'
-	| ALIGNOF '(' type_name ')'
+	: postfix_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| INC_OP unary_expression {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| DEC_OP unary_expression {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| unary_operator cast_expression {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| SIZEOF unary_expression {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| SIZEOF '(' type_name ')' {
+		$$.str = newStr("%s(%s)", $1.str, $3.str);
+	}
+	| ALIGNOF '(' type_name ')' {
+		$$.str = newStr("%s(%s)", $1.str, $3.str);
+	}
 	;
 
 unary_operator
@@ -119,233 +191,457 @@ unary_operator
 	;
 
 cast_expression
-	: unary_expression
-	| '(' type_name ')' cast_expression
+	: unary_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| '(' type_name ')' cast_expression {	
+		$$.str = newStr("(%s) %s", $2.str, $4.str);
+	}
 	;
 
 multiplicative_expression
-	: cast_expression
-	| multiplicative_expression '*' cast_expression
-	| multiplicative_expression '/' cast_expression
-	| multiplicative_expression '%' cast_expression
+	: cast_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| multiplicative_expression '*' cast_expression {
+		$$.str = newStr("%s * %s", $1.str, $3.str);
+	}
+	| multiplicative_expression '/' cast_expression {
+		$$.str = newStr("%s / %s", $1.str, $3.str);
+	}
+	| multiplicative_expression '%' cast_expression {
+		$$.str = newStr("%s % %s", $1.str, $3.str);
+	}
 	;
 
 additive_expression
-	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
+	: multiplicative_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| additive_expression '+' multiplicative_expression {
+		$$.str = newStr("%s + %s", $1.str, $3.str);
+	}
+	| additive_expression '-' multiplicative_expression {
+		$$.str = newStr("%s - %s", $1.str, $3.str);
+	}
 	;
 
 shift_expression
-	: additive_expression
-	| shift_expression LEFT_OP additive_expression
-	| shift_expression RIGHT_OP additive_expression
+	: additive_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| shift_expression LEFT_OP additive_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
+	| shift_expression RIGHT_OP additive_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
 	;
 
 relational_expression
-	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression LE_OP shift_expression
-	| relational_expression GE_OP shift_expression
+	: shift_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| relational_expression '<' shift_expression {
+		$$.str = newStr("%s < %s", $1.str, $3.str);
+	}
+	| relational_expression '>' shift_expression {
+		$$.str = newStr("%s > %s", $1.str, $3.str);
+	}
+	| relational_expression LE_OP shift_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
+	| relational_expression GE_OP shift_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
 	;
 
 equality_expression
-	: relational_expression
-	| equality_expression EQ_OP relational_expression
-	| equality_expression NE_OP relational_expression
+	: relational_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| equality_expression EQ_OP relational_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
+	| equality_expression NE_OP relational_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
 	;
 
 and_expression
-	: equality_expression
-	| and_expression '&' equality_expression
+	: equality_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| and_expression '&' equality_expression {
+		$$.str = newStr("%s & %s", $1.str, $3.str);
+	}
 	;
 
 exclusive_or_expression
-	: and_expression
-	| exclusive_or_expression '^' and_expression
+	: and_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| exclusive_or_expression '^' and_expression {
+		$$.str = newStr("%s ^ %s", $1.str, $3.str);
+	}
 	;
 
 inclusive_or_expression
-	: exclusive_or_expression
-	| inclusive_or_expression '|' exclusive_or_expression
+	: exclusive_or_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| inclusive_or_expression '|' exclusive_or_expression {
+		$$.str = newStr("%s | %s", $1.str, $3.str);
+	}
 	;
 
 logical_and_expression
-	: inclusive_or_expression
-	| logical_and_expression AND_OP inclusive_or_expression
+	: inclusive_or_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| logical_and_expression AND_OP inclusive_or_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
 	;
 
 logical_or_expression
-	: logical_and_expression
-	| logical_or_expression OR_OP logical_and_expression
+	: logical_and_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| logical_or_expression OR_OP logical_and_expression {
+		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+	}
 	;
 
 conditional_expression
-	: logical_or_expression
-	| logical_or_expression '?' expression ':' conditional_expression
+	: logical_or_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| logical_or_expression '?' expression ':' conditional_expression {
+		$$.str = newStr("%s ? %s : %s", $1.str, $2.str, $3.str);
+	}
 	;
 
 assignment_expression
-	: conditional_expression
-	| unary_expression assignment_operator assignment_expression
+	: conditional_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| unary_expression assignment_operator assignment_expression {
+		$$.str = newStr("%s%s%s", $1.str, $2.str, $3.str);
+	}
 	;
 
 assignment_operator
-	: '='
-	| MUL_ASSIGN
-	| DIV_ASSIGN
-	| MOD_ASSIGN
-	| ADD_ASSIGN
-	| SUB_ASSIGN
-	| LEFT_ASSIGN
-	| RIGHT_ASSIGN
-	| AND_ASSIGN
-	| XOR_ASSIGN
-	| OR_ASSIGN
+	: '=' {
+		$$.str = newStr("=");
+	}
+	| MUL_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| DIV_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| MOD_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| ADD_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| SUB_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| LEFT_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| RIGHT_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| AND_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| XOR_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
+	| OR_ASSIGN  {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 expression
-	: assignment_expression
-	| expression ',' assignment_expression
+	: assignment_expression {
+		$$.str = newStr("%s", $1.str);
+	}
+	| expression ',' assignment_expression {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 constant_expression
-	: conditional_expression	/* with constraints */
+	: conditional_expression	/* with constraints */  {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 declaration
 	: declaration_specifiers ';' {
+		$$.str = newStr("%s;\n", $1.str);
 		printf("ASDF\n");
 	}
 	| declaration_specifiers init_declarator_list ';' {
-		printf("%s: %d\n", $2.id, get_type($2.id));
+		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+
 		if(hasTypedef == 1)
 		{
 			printf("typealias");
 			add_type($2.id, TYPEDEF_NAME);
 		}
 		hasTypedef = 0;
-		printf("%s: %d\n", $2.id, get_type($2.id));
 	}
-	| static_assert_declaration
+	| static_assert_declaration {
+		$$.str = newStr("%s;\n", $1.str);
+	}
 	;
 
 declaration_specifiers
-	: storage_class_specifier declaration_specifiers
-	| storage_class_specifier
-	| type_specifier declaration_specifiers
-	| type_specifier
-	| type_qualifier declaration_specifiers
-	| type_qualifier
-	| function_specifier declaration_specifiers
-	| function_specifier
-	| alignment_specifier declaration_specifiers
-	| alignment_specifier
+	: storage_class_specifier declaration_specifiers {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| storage_class_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| type_specifier declaration_specifiers {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| type_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| type_qualifier declaration_specifiers {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| type_qualifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| function_specifier declaration_specifiers {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| function_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| alignment_specifier declaration_specifiers {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| alignment_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 init_declarator_list
-	: init_declarator {strcpy($$.id, $1.id); }
-	| init_declarator_list ',' init_declarator
+	: init_declarator {
+		strcpy($$.id, $1.id);
+		$$.str = newStr("%s", $1.str);
+	}
+	| init_declarator_list ',' init_declarator {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 init_declarator
 	: declarator '=' initializer
 	{
 		strcpy($$.id, $1.id);
+		$$.str = newStr("%s = %s", $1.str, $3.str);
 	}
 	| declarator
 	{
 		strcpy($$.id, $1.id);
+		$$.str = newStr("%s", $1.str);
 	}
 	;
 
 storage_class_specifier
 	: TYPEDEF	/* identifiers must be flagged as TYPEDEF_NAME */{
 		hasTypedef = 1;
+		$$.str = newStr("%s", $1.str);
 	}
-	| EXTERN
-	| STATIC
-	| THREAD_LOCAL
-	| AUTO
-	| REGISTER
+	| EXTERN {
+		$$.str = newStr("%s", $1.str);
+	}
+	| STATIC {
+		$$.str = newStr("%s", $1.str);
+	}
+	| THREAD_LOCAL {
+		$$.str = newStr("%s", $1.str);
+	}
+	| AUTO {
+		$$.str = newStr("%s", $1.str);
+	}
+	| REGISTER {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 type_specifier
-	: VOID
-	| CHAR
-	| SHORT
-	| INT
-	| LONG
-	| FLOAT
-	| DOUBLE
-	| SIGNED
-	| UNSIGNED
-	| BOOL
-	| COMPLEX
-	| IMAGINARY	  	/* non-mandated extension */
-	| atomic_type_specifier
-	| struct_or_union_specifier
-	| enum_specifier
-	| TYPEDEF_NAME		/* after it has been defined as such */ {$$.str = newStr("%s", $1.str);printf("TYPE YAY! %s\n", $$.str);}
+	: VOID {
+		$$.str = newStr("%s", $1.str);
+	}
+	| CHAR {
+		$$.str = newStr("%s", $1.str);
+	}
+	| SHORT {
+		$$.str = newStr("%s", $1.str);
+	}
+	| INT {
+		$$.str = newStr("%s", $1.str);
+	}
+	| LONG {
+		$$.str = newStr("%s", $1.str);
+	}
+	| FLOAT {
+		$$.str = newStr("%s", $1.str);
+	}
+	| DOUBLE {
+		$$.str = newStr("%s", $1.str);
+	}
+	| SIGNED {
+		$$.str = newStr("%s", $1.str);
+	}
+	| UNSIGNED {
+		$$.str = newStr("%s", $1.str);
+	}
+	| BOOL {
+		$$.str = newStr("%s", $1.str);
+	}
+	| COMPLEX {
+		$$.str = newStr("%s", $1.str);
+	}
+	| IMAGINARY	  	/* non-mandated extension */ {
+		$$.str = newStr("%s", $1.str);
+	}
+	| atomic_type_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| struct_or_union_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| enum_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| TYPEDEF_NAME		/* after it has been defined as such */ {
+		$$.str = newStr("%s", $1.str);
+		printf("TYPE YAY! %s\n", $$.str);
+	}
 	;
 
 struct_or_union_specifier
-	: struct_or_union '{' struct_declaration_list '}'
-	| struct_or_union IDENTIFIER '{' struct_declaration_list '}'
-	| struct_or_union IDENTIFIER
+	: struct_or_union '{' struct_declaration_list '}' {
+		$$.str = newStr("%s {\n%s\n}", $1.str, $3.str);
+	}
+	| struct_or_union IDENTIFIER '{' struct_declaration_list '}' {
+		$$.str = newStr("%s %s {\n%s\n}", $1.str, $2.str, $4.str);
+	}
+	| struct_or_union IDENTIFIER {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
 	;
 
 struct_or_union
-	: STRUCT
-	| UNION
+	: STRUCT {
+		$$.str = newStr("%s", $1.str);
+	}
+	| UNION {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 struct_declaration_list
-	: struct_declaration
+	: struct_declaration {
+		$$.str = newStr("%s", $1.str);
+	}
 	| struct_declaration_list struct_declaration
 	;
 
 struct_declaration
-	: specifier_qualifier_list ';'	/* for anonymous struct/union */
-	| specifier_qualifier_list struct_declarator_list ';'
-	| static_assert_declaration
+	: specifier_qualifier_list ';'	/* for anonymous struct/union */  {
+		$$.str = newStr("%s;\n", $1.str);
+	}
+	| specifier_qualifier_list struct_declarator_list ';' {
+		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+	}
+	| static_assert_declaration {
+		$$.str = newStr("%s\n;", $1.str);
+	}
 	;
 
 specifier_qualifier_list
-	: type_specifier specifier_qualifier_list
-	| type_specifier
-	| type_qualifier specifier_qualifier_list
-	| type_qualifier
+	: type_specifier specifier_qualifier_list {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| type_specifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| type_qualifier specifier_qualifier_list {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| type_qualifier {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 struct_declarator_list
-	: struct_declarator
-	| struct_declarator_list ',' struct_declarator
+	: struct_declarator {
+		$$.str = newStr("%s", $1.str);
+	}
+	| struct_declarator_list ',' struct_declarator {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 struct_declarator
-	: ':' constant_expression
-	| declarator ':' constant_expression
-	| declarator
+	: ':' constant_expression {
+		$$.str = newStr(":%s", $2.str);
+	}
+	| declarator ':' constant_expression {
+		$$.str = newStr("%s: %s", $1.str, $3.str);
+	}
+	| declarator {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 enum_specifier
-	: ENUM '{' enumerator_list '}'
-	| ENUM '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER '{' enumerator_list '}'
-	| ENUM IDENTIFIER '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER
+	: ENUM '{' enumerator_list '}' {
+		$$.str = newStr("%s { %s }", $1.str, $3.str);
+	}
+	| ENUM '{' enumerator_list ',' '}' {
+		$$.str = newStr("%s { %s , }", $1.str, $3.str);
+	}
+	| ENUM IDENTIFIER '{' enumerator_list '}' {
+		$$.str = newStr("%s %s { %s }", $1.str, $2.str, $4.str);
+	}
+	| ENUM IDENTIFIER '{' enumerator_list ',' '}' {
+		$$.str = newStr("%s %s { %s , }", $1.str, $2.str, $4.str);
+	}
+	| ENUM IDENTIFIER {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 enumerator_list
-	: enumerator
-	| enumerator_list ',' enumerator
+	: enumerator {
+		$$.str = newStr("%s", $1.str);
+	}
+	| enumerator_list ',' enumerator {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
-	: enumeration_constant '=' constant_expression
-	| enumeration_constant
+	: enumeration_constant '=' constant_expression {
+		$$.str = newStr("%s = %s", $1.str, $3.str);
+	}
+	| enumeration_constant {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 atomic_type_specifier
@@ -353,15 +649,27 @@ atomic_type_specifier
 	;
 
 type_qualifier
-	: CONST
-	| RESTRICT
-	| VOLATILE
-	| ATOMIC
+	: CONST {
+		$$.str = newStr("%s", $1.str);
+	}
+	| RESTRICT {
+		$$.str = newStr("%s", $1.str);
+	}
+	| VOLATILE {
+		$$.str = newStr("%s", $1.str);
+	}
+	| ATOMIC {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 function_specifier
-	: INLINE
-	| NORETURN
+	: INLINE {
+		$$.str = newStr("%s", $1.str);
+	}
+	| NORETURN {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 alignment_specifier
