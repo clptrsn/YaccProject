@@ -21,7 +21,7 @@ WS  [ \t\v\n\f]
 
 typedef struct {
     int ival;
-    char str[999];
+    char *str;
 	char id[64];
 	int hasTypedef;
 } tstruct;
@@ -29,6 +29,8 @@ typedef struct {
 #define YYSTYPE tstruct
 
 #include "inSure.tab.h"
+
+char *newStr(char *format, ...);
 
 void yyerror(char *);  /* prints grammar violation message */
 
@@ -42,90 +44,90 @@ static int check_type(void);
 "/*"                                    { comment(); }
 "//".*                                    { /* consume //-comment */ }
 
-"auto"					{ return(AUTO); }
-"break"					{ return(BREAK); }
-"case"					{ return(CASE); }
-"char"					{ return(CHAR); }
-"const"					{ return(CONST); }
-"continue"				{ return(CONTINUE); }
-"default"				{ return(DEFAULT); }
-"do"					{ return(DO); }
-"double"				{ return(DOUBLE); }
-"else"					{ return(ELSE); }
-"enum"					{ return(ENUM); }
-"extern"				{ return(EXTERN); }
-"float"					{ return(FLOAT); }
-"for"					{ return(FOR); }
-"goto"					{ return(GOTO); }
-"if"					{ return(IF); }
-"inline"				{ return(INLINE); }
-"int"					{ return(INT); }
-"long"					{ return(LONG); }
-"register"				{ return(REGISTER); }
-"restrict"				{ return(RESTRICT); }
-"return"				{ return(RETURN); }
-"short"					{ return(SHORT); }
-"signed"				{ return(SIGNED); }
-"sizeof"				{ return(SIZEOF); }
-"static"				{ return(STATIC); }
-"struct"				{ return(STRUCT); }
-"switch"				{ return(SWITCH); }
-"typedef"				{ return(TYPEDEF); }
-"union"					{ return(UNION); }
-"unsigned"				{ return(UNSIGNED); }
-"void"					{ return(VOID); }
-"volatile"				{ return(VOLATILE); }
-"while"					{ return(WHILE); }
-"_Alignas"                              { return ALIGNAS; }
-"_Alignof"                              { return ALIGNOF; }
-"_Atomic"                               { return ATOMIC; }
-"_Bool"                                 { return BOOL; }
-"_Complex"                              { return COMPLEX; }
-"_Generic"                              { return GENERIC; }
-"_Imaginary"                            { return IMAGINARY; }
-"_Noreturn"                             { return NORETURN; }
-"_Static_assert"                        { return STATIC_ASSERT; }
-"_Thread_local"                         { return THREAD_LOCAL; }
-"__func__"                              { return FUNC_NAME; }
+"auto"					{ yylval.str = newStr("%s", yytext);return(AUTO); }
+"break"					{ yylval.str = newStr("%s", yytext);return(BREAK); }
+"case"					{ yylval.str = newStr("%s", yytext);return(CASE); }
+"char"					{ yylval.str = newStr("%s", yytext); return(CHAR); }
+"const"					{ yylval.str = newStr("%s", yytext); return(CONST); }
+"continue"				{ yylval.str = newStr("%s", yytext); return(CONTINUE); }
+"default"				{ yylval.str = newStr("%s", yytext); return(DEFAULT); }
+"do"					{ yylval.str = newStr("%s", yytext); return(DO); }
+"double"				{ yylval.str = newStr("%s", yytext); return(DOUBLE); }
+"else"					{ yylval.str = newStr("%s", yytext); return(ELSE); }
+"enum"					{ yylval.str = newStr("%s", yytext); return(ENUM); }
+"extern"				{ yylval.str = newStr("%s", yytext); return(EXTERN); }
+"float"					{ yylval.str = newStr("%s", yytext); return(FLOAT); }
+"for"					{ yylval.str = newStr("%s", yytext); return(FOR); }
+"goto"					{ yylval.str = newStr("%s", yytext); return(GOTO); }
+"if"					{ yylval.str = newStr("%s", yytext); return(IF); }
+"inline"				{ yylval.str = newStr("%s", yytext); return(INLINE); }
+"int"					{ yylval.str = newStr("%s", yytext); return(INT); }
+"long"					{ yylval.str = newStr("%s", yytext); return(LONG); }
+"register"				{ yylval.str = newStr("%s", yytext); return(REGISTER); }
+"restrict"				{ yylval.str = newStr("%s", yytext); return(RESTRICT); }
+"return"				{ yylval.str = newStr("%s", yytext); return(RETURN); }
+"short"					{ yylval.str = newStr("%s", yytext); return(SHORT); }
+"signed"				{ yylval.str = newStr("%s", yytext); return(SIGNED); }
+"sizeof"				{ yylval.str = newStr("%s", yytext); return(SIZEOF); }
+"static"				{ yylval.str = newStr("%s", yytext); return(STATIC); }
+"struct"				{ yylval.str = newStr("%s", yytext); return(STRUCT); }
+"switch"				{ yylval.str = newStr("%s", yytext); return(SWITCH); }
+"typedef"				{ yylval.str = newStr("%s", yytext); return(TYPEDEF); }
+"union"					{ yylval.str = newStr("%s", yytext); return(UNION); }
+"unsigned"				{ yylval.str = newStr("%s", yytext); return(UNSIGNED); }
+"void"					{ yylval.str = newStr("%s", yytext); return(VOID); }
+"volatile"				{ yylval.str = newStr("%s", yytext); return(VOLATILE); }
+"while"					{ yylval.str = newStr("%s", yytext); return(WHILE); }
+"_Alignas"                              { yylval.str = newStr("%s", yytext); return ALIGNAS; }
+"_Alignof"                              { yylval.str = newStr("%s", yytext); return ALIGNOF; }
+"_Atomic"                               { yylval.str = newStr("%s", yytext); return ATOMIC; }
+"_Bool"                                 { yylval.str = newStr("%s", yytext); return BOOL; }
+"_Complex"                              { yylval.str = newStr("%s", yytext); return COMPLEX; }
+"_Generic"                              { yylval.str = newStr("%s", yytext); return GENERIC; }
+"_Imaginary"                            { yylval.str = newStr("%s", yytext); return IMAGINARY; }
+"_Noreturn"                             { yylval.str = newStr("%s", yytext); return NORETURN; }
+"_Static_assert"                        { yylval.str = newStr("%s", yytext); return STATIC_ASSERT; }
+"_Thread_local"                         { yylval.str = newStr("%s", yytext); return THREAD_LOCAL; }
+"__func__"                              { yylval.str = newStr("%s", yytext); return FUNC_NAME; }
 
-{L}{A}*					{strcpy(yylval.str,yytext); return check_type(); }
+{L}{A}*					{yylval.str = newStr("%s", yytext); return check_type(); }
 
-{HP}{H}+{IS}?				{ return I_CONSTANT; }
-{NZ}{D}*{IS}?				{ return I_CONSTANT; }
-"0"{O}*{IS}?				{ return I_CONSTANT; }
-{CP}?"'"([^'\\\n]|{ES})+"'"		{ return I_CONSTANT; }
+{HP}{H}+{IS}?				{ yylval.str = newStr("%s", yytext); return I_CONSTANT; }
+{NZ}{D}*{IS}?				{ yylval.str = newStr("%s", yytext); return I_CONSTANT; }
+"0"{O}*{IS}?				{ yylval.str = newStr("%s", yytext); return I_CONSTANT; }
+{CP}?"'"([^'\\\n]|{ES})+"'"		{ yylval.str = newStr("%s", yytext); return I_CONSTANT; }
 
-{D}+{E}{FS}?				{ return F_CONSTANT; }
-{D}*"."{D}+{E}?{FS}?			{ return F_CONSTANT; }
-{D}+"."{E}?{FS}?			{ return F_CONSTANT; }
-{HP}{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}*"."{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}+"."{P}{FS}?			{ return F_CONSTANT; }
+{D}+{E}{FS}?				{ yylval.str = newStr("%s", yytext); return F_CONSTANT; }
+{D}*"."{D}+{E}?{FS}?			{ yylval.str = newStr("%s", yytext); return F_CONSTANT; }
+{D}+"."{E}?{FS}?			{ yylval.str = newStr("%s", yytext); return F_CONSTANT; }
+{HP}{H}+{P}{FS}?			{ yylval.str = newStr("%s", yytext); return F_CONSTANT; }
+{HP}{H}*"."{H}+{P}{FS}?			{ yylval.str = newStr("%s", yytext); return F_CONSTANT; }
+{HP}{H}+"."{P}{FS}?			{ yylval.str = newStr("%s", yytext); return F_CONSTANT; }
 
-({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ return STRING_LITERAL; }
+({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ yylval.str = newStr("%s", yytext); return STRING_LITERAL; }
 
-"..."					{ return ELLIPSIS; }
-">>="					{ return RIGHT_ASSIGN; }
-"<<="					{ return LEFT_ASSIGN; }
-"+="					{ return ADD_ASSIGN; }
-"-="					{ return SUB_ASSIGN; }
-"*="					{ return MUL_ASSIGN; }
-"/="					{ return DIV_ASSIGN; }
-"%="					{ return MOD_ASSIGN; }
-"&="					{ return AND_ASSIGN; }
-"^="					{ return XOR_ASSIGN; }
-"|="					{ return OR_ASSIGN; }
-">>"					{ return RIGHT_OP; }
-"<<"					{ return LEFT_OP; }
-"++"					{ return INC_OP; }
-"--"					{ return DEC_OP; }
-"->"					{ return PTR_OP; }
-"&&"					{ return AND_OP; }
-"||"					{ return OR_OP; }
-"<="					{ return LE_OP; }
-">="					{ return GE_OP; }
-"=="					{ return EQ_OP; }
-"!="					{ return NE_OP; }
+"..."					{ yylval.str = newStr("%s", yytext); return ELLIPSIS; }
+">>="					{ yylval.str = newStr("%s", yytext); return RIGHT_ASSIGN; }
+"<<="					{ yylval.str = newStr("%s", yytext); return LEFT_ASSIGN; }
+"+="					{ yylval.str = newStr("%s", yytext); return ADD_ASSIGN; }
+"-="					{ yylval.str = newStr("%s", yytext); return SUB_ASSIGN; }
+"*="					{ yylval.str = newStr("%s", yytext); return MUL_ASSIGN; }
+"/="					{ yylval.str = newStr("%s", yytext); return DIV_ASSIGN; }
+"%="					{ yylval.str = newStr("%s", yytext); return MOD_ASSIGN; }
+"&="					{ yylval.str = newStr("%s", yytext); return AND_ASSIGN; }
+"^="					{ yylval.str = newStr("%s", yytext); return XOR_ASSIGN; }
+"|="					{ yylval.str = newStr("%s", yytext); return OR_ASSIGN; }
+">>"					{ yylval.str = newStr("%s", yytext); return RIGHT_OP; }
+"<<"					{ yylval.str = newStr("%s", yytext); return LEFT_OP; }
+"++"					{ yylval.str = newStr("%s", yytext); return INC_OP; }
+"--"					{ yylval.str = newStr("%s", yytext); return DEC_OP; }
+"->"					{ yylval.str = newStr("%s", yytext); return PTR_OP; }
+"&&"					{ yylval.str = newStr("%s", yytext); return AND_OP; }
+"||"					{ yylval.str = newStr("%s", yytext); return OR_OP; }
+"<="					{ yylval.str = newStr("%s", yytext); return LE_OP; }
+">="					{ yylval.str = newStr("%s", yytext); return GE_OP; }
+"=="					{ yylval.str = newStr("%s", yytext); return EQ_OP; }
+"!="					{ yylval.str = newStr("%s", yytext); return NE_OP; }
 ";"					{ return ';'; }
 ("{"|"<%")				{ return '{'; }
 ("}"|"%>")				{ return '}'; }
@@ -184,12 +186,12 @@ static int check_type(void)
 {
     switch (get_type(yytext))
     {
-    case TYPEDEF_NAME:                /* previously defined */
-        return TYPEDEF_NAME;
-    case ENUMERATION_CONSTANT:        /* previously defined */
-        return ENUMERATION_CONSTANT;
-    default:                          /* includes undefined */
-        return IDENTIFIER;
+        case TYPEDEF_NAME:                /* previously defined */
+            return TYPEDEF_NAME;
+        case ENUMERATION_CONSTANT:        /* previously defined */
+            return ENUMERATION_CONSTANT;
+        default:                          /* includes undefined */
+            return IDENTIFIER;
     }
 }
 

@@ -19,10 +19,11 @@
 %{
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 
 typedef struct {
 	int ival;
-	char str[999];
+	char *str;
 	char id[64];
 	int hasTypedef;
 } tstruct;
@@ -36,6 +37,8 @@ extern void add_type(char* id, int type);
 extern void add_table(char* id);
 extern void in_table(char* id);
 extern int get_type(char* id);
+
+char* newStr(char const *fmt, ...);
 int yylex();
 void yyerror(char *s);
 %}
@@ -284,7 +287,7 @@ type_specifier
 	| atomic_type_specifier
 	| struct_or_union_specifier
 	| enum_specifier
-	| TYPEDEF_NAME		/* after it has been defined as such */ {printf("TYPE YAY!\n");}
+	| TYPEDEF_NAME		/* after it has been defined as such */ {$$.str = newStr("%s", $1.str);printf("TYPE YAY! %s\n", $$.str);}
 	;
 
 struct_or_union_specifier
@@ -572,11 +575,110 @@ declaration_list
 
 %%
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 int main()
 {
 	init_symtable();
 	yyparse();
+}
+
+int getDigitCount(int num)
+{
+	int length = 1;
+	if(num < 0)
+	{
+		num = -1 * num;
+		length++; /*  the '-' char */
+	}
+
+	while(num > 9)
+	{
+		length++;
+		num = num / 10;
+	}
+	return length;
+}
+
+
+char* newStr(char const *fmt, ...)
+{
+	int int_temp;
+	char char_temp;
+	char *string_temp;
+	double double_temp;
+
+	int param_length;
+
+    va_list arg;
+	va_start(arg, fmt);
+
+	char ch;
+	int count = 0;
+
+	int length = 0;
+	int currentBufferSize = 512;
+
+	char *buffer = malloc(sizeof(char) * 512);
+
+	while(ch = fmt[count])
+	{
+		if(length > currentBufferSize - 2)
+		{
+			buffer = realloc(buffer, 2*currentBufferSize);
+			currentBufferSize = 2*currentBufferSize;
+		}
+		if(ch == '%')
+		{
+			count++;
+			switch(fmt[count])
+			{
+				case '%':
+					buffer[length] = '%';
+					length++;
+					break;
+				case 'c':
+					buffer[length] = va_arg(arg, int);
+					length++;
+					break;
+				case 's':
+					string_temp = va_arg(arg, char *);
+					param_length = strlen(string_temp);
+					while(length + param_length + 1 > currentBufferSize)
+					{
+						buffer = realloc(buffer, sizeof(2*currentBufferSize));
+						currentBufferSize = 2*currentBufferSize;	
+					}
+					buffer[length] = '\0';
+					strcat(buffer, string_temp);
+
+					length += param_length;
+					break;
+				case 'd':
+					int_temp = va_arg(arg, int);
+					param_length = getDigitCount(int_temp);
+					while(length + param_length + 1 > currentBufferSize)
+					{
+						buffer = realloc(buffer, sizeof(2*currentBufferSize));
+						currentBufferSize = 2*currentBufferSize;	
+					}
+					sprintf(&buffer[length], "%d", int_temp);
+					length += param_length;
+			}
+
+		}
+		else
+		{
+			buffer[length] = ch;
+			length++;
+		}
+
+		count++;
+	}
+
+	buffer[length] = '\0';
+	return buffer;
 }
 
 void yyerror(char *s)
