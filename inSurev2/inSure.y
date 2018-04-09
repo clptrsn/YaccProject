@@ -385,14 +385,12 @@ constant_expression
 declaration
 	: declaration_specifiers ';' {
 		$$.str = newStr("%s;\n", $1.str);
-		printf("ASDF\n");
 	}
 	| declaration_specifiers init_declarator_list ';' {
 		$$.str = newStr("%s %s;\n", $1.str, $2.str);
 
 		if(hasTypedef == 1)
 		{
-			printf("typealias");
 			add_type($2.id, TYPEDEF_NAME);
 		}
 		hasTypedef = 0;
@@ -446,13 +444,11 @@ init_declarator_list
 	;
 
 init_declarator
-	: declarator '=' initializer
-	{
+	: declarator '=' initializer {
 		strcpy($$.id, $1.id);
 		$$.str = newStr("%s = %s", $1.str, $3.str);
 	}
-	| declarator
-	{
+	| declarator {
 		strcpy($$.id, $1.id);
 		$$.str = newStr("%s", $1.str);
 	}
@@ -528,16 +524,15 @@ type_specifier
 	}
 	| TYPEDEF_NAME		/* after it has been defined as such */ {
 		$$.str = newStr("%s", $1.str);
-		printf("TYPE YAY! %s\n", $$.str);
 	}
 	;
 
 struct_or_union_specifier
 	: struct_or_union '{' struct_declaration_list '}' {
-		$$.str = newStr("%s {\n%s\n}", $1.str, $3.str);
+		$$.str = newStr("%s {\n%s}", $1.str, $3.str);
 	}
 	| struct_or_union IDENTIFIER '{' struct_declaration_list '}' {
-		$$.str = newStr("%s %s {\n%s\n}", $1.str, $2.str, $4.str);
+		$$.str = newStr("%s %s {\n%s}", $1.str, $2.str, $4.str);
 	}
 	| struct_or_union IDENTIFIER {
 		$$.str = newStr("%s %s", $1.str, $2.str);
@@ -557,7 +552,9 @@ struct_declaration_list
 	: struct_declaration {
 		$$.str = newStr("%s", $1.str);
 	}
-	| struct_declaration_list struct_declaration
+	| struct_declaration_list struct_declaration {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
 	;
 
 struct_declaration
@@ -645,7 +642,9 @@ enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
 	;
 
 atomic_type_specifier
-	: ATOMIC '(' type_name ')'
+	: ATOMIC '(' type_name ')' {
+		$$.str = newStr("%s(%s) ", $1.str, $3.str);
+	}
 	;
 
 type_qualifier
@@ -673,212 +672,448 @@ function_specifier
 	;
 
 alignment_specifier
-	: ALIGNAS '(' type_name ')'
-	| ALIGNAS '(' constant_expression ')'
+	: ALIGNAS '(' type_name ')' {
+		$$.str = newStr("%s(%s) ", $1.str, $3.str);
+	}
+	| ALIGNAS '(' constant_expression ')' {
+		$$.str = newStr("%s(%s) ", $1.str, $3.str);		
+	}
 	;
 
 declarator
-	: pointer direct_declarator {strcpy($$.id, $2.id);}
-	| direct_declarator {strcpy($$.id, $1.id);}
+	: pointer direct_declarator {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+		strcpy($$.id, $2.id);
+	}
+	| direct_declarator {
+		$$.str = newStr("%s", $1.str);
+		strcpy($$.id, $1.id);
+	}
 	;
 
 direct_declarator
 	: IDENTIFIER {
-		printf("HELOOW %s\n", $1.str);
+		$$.str = newStr("%s", $1.str);
 		strcpy($$.id, $1.str);
-
 	}
-	| '(' declarator ')'
-	| direct_declarator '[' ']'
-	| direct_declarator '[' '*' ']'
-	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
-	| direct_declarator '[' STATIC assignment_expression ']'
-	| direct_declarator '[' type_qualifier_list '*' ']'
-	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']'
-	| direct_declarator '[' type_qualifier_list assignment_expression ']'
-	| direct_declarator '[' type_qualifier_list ']'
-	| direct_declarator '[' assignment_expression ']'
-	| direct_declarator '(' parameter_type_list ')'
-	| direct_declarator '(' ')'
-	| direct_declarator '(' identifier_list ')'
+	| '(' declarator ')' {
+		$$.str = newStr("(%s)", $2.str);
+		strcpy($$.id, $2.str);
+	}
+	| direct_declarator '[' ']' {
+		$$.str = newStr("%s[]", $1.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' '*' ']' {
+		$$.str = newStr("%s[*]", $1.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']' {
+		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' STATIC assignment_expression ']' {
+		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' type_qualifier_list '*' ']' {
+		$$.str = newStr("%s[%s*]", $1.str, $3.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']' {
+		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' type_qualifier_list assignment_expression ']' {
+		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' type_qualifier_list ']' {
+		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '[' assignment_expression ']' {
+		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '(' parameter_type_list ')' {
+		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '(' ')' {
+		$$.str = newStr("%s()", $1.str);
+		strcpy($$.id, $1.str);
+	}
+	| direct_declarator '(' identifier_list ')' {
+		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		strcpy($$.id, $1.str);
+	}
 	;
 
 pointer
-	: '*' type_qualifier_list pointer
-	| '*' type_qualifier_list
-	| '*' pointer
-	| '*'
+	: '*' type_qualifier_list pointer {
+		$$.str = newStr("*%s %s", $2.str, $3.str);
+	}
+	| '*' type_qualifier_list {
+		$$.str = newStr("*%s", $2.str);
+	}
+	| '*' pointer {
+		$$.str = newStr("*%s", $2.str);
+	}
+	| '*' {
+		$$.str = newStr("*");
+	}
 	;
 
 type_qualifier_list
-	: type_qualifier
-	| type_qualifier_list type_qualifier
+	: type_qualifier {
+		$$.str = newStr("%s", $1.str);
+	}
+	| type_qualifier_list type_qualifier {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
 	;
 
 
 parameter_type_list
-	: parameter_list ',' ELLIPSIS
-	| parameter_list
+	: parameter_list ',' ELLIPSIS {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
+	| parameter_list {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 parameter_list
-	: parameter_declaration
-	| parameter_list ',' parameter_declaration
+	: parameter_declaration {
+		$$.str = newStr("%s", $1.str);
+	}
+	| parameter_list ',' parameter_declaration {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 parameter_declaration
-	: declaration_specifiers declarator
-	| declaration_specifiers abstract_declarator
-	| declaration_specifiers
+	: declaration_specifiers declarator {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| declaration_specifiers abstract_declarator {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| declaration_specifiers {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 identifier_list
-	: IDENTIFIER
-	| identifier_list ',' IDENTIFIER
+	: IDENTIFIER {
+		$$.str = newStr("%s", $1.str);
+	}
+	| identifier_list ',' IDENTIFIER {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 type_name
-	: specifier_qualifier_list abstract_declarator
-	| specifier_qualifier_list
+	: specifier_qualifier_list abstract_declarator {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| specifier_qualifier_list {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 abstract_declarator
-	: pointer direct_abstract_declarator
-	| pointer
-	| direct_abstract_declarator
+	: pointer direct_abstract_declarator {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
+	| pointer {
+		$$.str = newStr("%s", $1.str);
+	}
+	| direct_abstract_declarator {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 direct_abstract_declarator
-	: '(' abstract_declarator ')'
-	| '[' ']'
-	| '[' '*' ']'
-	| '[' STATIC type_qualifier_list assignment_expression ']'
-	| '[' STATIC assignment_expression ']'
-	| '[' type_qualifier_list STATIC assignment_expression ']'
-	| '[' type_qualifier_list assignment_expression ']'
-	| '[' type_qualifier_list ']'
-	| '[' assignment_expression ']'
-	| direct_abstract_declarator '[' ']'
-	| direct_abstract_declarator '[' '*' ']'
-	| direct_abstract_declarator '[' STATIC type_qualifier_list assignment_expression ']'
-	| direct_abstract_declarator '[' STATIC assignment_expression ']'
-	| direct_abstract_declarator '[' type_qualifier_list assignment_expression ']'
-	| direct_abstract_declarator '[' type_qualifier_list STATIC assignment_expression ']'
-	| direct_abstract_declarator '[' type_qualifier_list ']'
-	| direct_abstract_declarator '[' assignment_expression ']'
-	| '(' ')'
-	| '(' parameter_type_list ')'
-	| direct_abstract_declarator '(' ')'
-	| direct_abstract_declarator '(' parameter_type_list ')'
+	: '(' abstract_declarator ')' {
+		$$.str = newStr("(%s)", $2.str);
+	}
+	| '[' ']' {
+		$$.str = newStr("[]");
+	}
+	| '[' '*' ']' {
+		$$.str = newStr("[*]");
+	}
+	| '[' STATIC type_qualifier_list assignment_expression ']' {
+		$$.str = newStr("[%s %s %s]", $2.str, $3.str, $4.str);
+	}
+	| '[' STATIC assignment_expression ']' {
+		$$.str = newStr("[%s %s]", $2.str, $3.str);
+	}
+	| '[' type_qualifier_list STATIC assignment_expression ']' {
+		$$.str = newStr("[%s %s %s]", $2.str, $3.str, $4.str);
+	}
+	| '[' type_qualifier_list assignment_expression ']' {
+		$$.str = newStr("[%s %s]", $2.str, $3.str);
+	}
+	| '[' type_qualifier_list ']' {
+		$$.str = newStr("[%s]", $2.str);
+	}
+	| '[' assignment_expression ']' {
+		$$.str = newStr("[%s]", $2.str);
+	}
+	| direct_abstract_declarator '[' ']' {
+		$$.str = newStr("%s[]", $1.str);
+	}
+	| direct_abstract_declarator '[' '*' ']' {
+		$$.str = newStr("%s[*]", $1.str);
+	}
+	| direct_abstract_declarator '[' STATIC type_qualifier_list assignment_expression ']' {
+		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+	}
+	| direct_abstract_declarator '[' STATIC assignment_expression ']' {
+		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+	}
+	| direct_abstract_declarator '[' type_qualifier_list assignment_expression ']' {
+		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+	}
+	| direct_abstract_declarator '[' type_qualifier_list STATIC assignment_expression ']' {
+		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+	}
+	| direct_abstract_declarator '[' type_qualifier_list ']' {
+		$$.str = newStr("%s[%s]", $1.str, $3.str);
+	}
+	| direct_abstract_declarator '[' assignment_expression ']' {
+		$$.str = newStr("%s[%s]", $1.str, $3.str);
+	}
+	| '(' ')' {
+		$$.str = newStr("()");
+	}
+	| '(' parameter_type_list ')' {
+		$$.str = newStr("(%s)", $2.str);
+	}
+	| direct_abstract_declarator '(' ')' {
+		$$.str = newStr("%s()", $1.str);
+	}
+	| direct_abstract_declarator '(' parameter_type_list ')' {
+		$$.str = newStr("%s(%s)", $1.str, $3.str);
+	}
 	;
 
 initializer
-	: '{' initializer_list '}'
-	| '{' initializer_list ',' '}'
-	| assignment_expression
+	: '{' initializer_list '}' {
+		$$.str = newStr("{ %s }", $2.str);
+	}
+	| '{' initializer_list ',' '}' {
+		$$.str = newStr("{ %s , }", $2.str);
+	}
+	| assignment_expression {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 initializer_list
-	: designation initializer
-	| initializer
-	| initializer_list ',' designation initializer
-	| initializer_list ',' initializer
+	: designation initializer {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+	}
+	| initializer {
+		$$.str = newStr("%s", $1.str);
+	}
+	| initializer_list ',' designation initializer {
+		$$.str = newStr("%s, %s %s", $1.str, $3.str, $4.str);
+	}
+	| initializer_list ',' initializer {
+		$$.str = newStr("%s, %s", $1.str, $3.str);
+	}
 	;
 
 designation
-	: designator_list '='
+	: designator_list '=' {
+		$$.str = newStr("%s =", $1.str);
+	}
 	;
 
 designator_list
-	: designator
-	| designator_list designator
+	: designator {
+		$$.str = newStr("%s", $1.str);
+	}
+	| designator_list designator {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
 	;
 
 designator
-	: '[' constant_expression ']'
-	| '.' IDENTIFIER
+	: '[' constant_expression ']' {
+		$$.str = newStr("[%s]", $2.str);
+	}
+	| '.' IDENTIFIER {
+		$$.str = newStr(".%s", $2.str);
+	}
 	;
 
 static_assert_declaration
-	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';'
+	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';' {
+		$$.str = newStr("%s(%s, %s);\n", $1.str, $3.str, $5.str);
+	}
 	;
 
 statement
-	: labeled_statement
-	| compound_statement
-	| expression_statement
-	| selection_statement
-	| iteration_statement
-	| jump_statement
+	: labeled_statement {
+		$$.str = newStr("%s", $1.str);
+	}
+	| compound_statement {
+		$$.str = newStr("%s", $1.str);
+	}
+	| expression_statement {
+		$$.str = newStr("%s", $1.str);
+	}
+	| selection_statement {
+		$$.str = newStr("%s", $1.str);
+	}
+	| iteration_statement {
+		$$.str = newStr("%s", $1.str);
+	}
+	| jump_statement {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
+	: IDENTIFIER ':' statement {
+		$$.str = newStr("%s:\n%s", $1.str, $3.str);
+	}
+	| CASE constant_expression ':' statement {
+		$$.str = newStr("%s %s:\n%s", $1.str, $3.str);
+	}
+	| DEFAULT ':' statement {
+		$$.str = newStr("%s:\n%s", $1.str, $3.str);
+	}
 	;
 
 compound_statement
-	: '{' '}'
-	| '{'  block_item_list '}'
+	: '{' '}' {
+		$$.str = newStr("{\n}");
+	}
+	| '{'  block_item_list '}' {
+		$$.str = newStr("{\n%s}", $2.str);
+	}
 	;
 
 block_item_list
-	: block_item
-	| block_item_list block_item
+	: block_item {
+		$$.str = newStr("%s", $1.str);
+	}
+	| block_item_list block_item {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
 	;
 
 block_item
-	: declaration
-	| statement
+	: declaration {
+		$$.str = newStr("%s", $1.str);
+	}
+	| statement {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 expression_statement
-	: ';'
-	| expression ';'
+	: ';' {
+		$$.str = newStr(";\n");
+	}
+	| expression ';' {
+		$$.str = newStr("%s;\n", $1.str);
+	}
 	;
 
 selection_statement
-	: IF '(' expression ')' statement ELSE statement
-	| IF '(' expression ')' statement
-	| SWITCH '(' expression ')' statement
+	: IF '(' expression ')' statement ELSE statement {
+		$$.str = newStr("%s(%s)\n%s\n%s\n%s\n", $1.str, $3.str, $5.str, $6.str, $7.str);
+	}
+	| IF '(' expression ')' statement {
+		$$.str = newStr("%s(%s)\n%s\n", $1.str, $3.str, $5.str);
+	}
+	| SWITCH '(' expression ')' statement {
+		$$.str = newStr("%s(%s)\n%s\n", $1.str, $3.str, $5.str);
+	}
 	;
 
 iteration_statement
-	: WHILE '(' expression ')' statement
-	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
-	| FOR '(' declaration expression_statement ')' statement
-	| FOR '(' declaration expression_statement expression ')' statement
+	: WHILE '(' expression ')' statement {
+		$$.str = newStr("%s(%s)\n%s\n", $1.str, $3.str, $5.str);
+	}
+	| DO statement WHILE '(' expression ')' ';' {
+		$$.str = newStr("%s\n%s\n%s(%s);\n", $1.str, $2.str, $3.str, $5.str);
+	}
+	| FOR '(' expression_statement expression_statement ')' statement {
+		$$.str = newStr("%s(%s %s)\n%s\n", $1.str, $3.str, $4.str, $6.str);
+	}
+	| FOR '(' expression_statement expression_statement expression ')' statement {
+		$$.str = newStr("%s(%s %s %s)\n%s\n", $1.str, $3.str, $4.str, $5.str, $7.str);
+	}
+	| FOR '(' declaration expression_statement ')' statement {
+		$$.str = newStr("%s(%s %s)\n%s\n", $1.str, $3.str, $4.str, $6.str);
+	}
+	| FOR '(' declaration expression_statement expression ')' statement {
+		$$.str = newStr("%s(%s %s %s)\n%s\n", $1.str, $3.str, $4.str, $5.str, $7.str);
+	}
 	;
 
 jump_statement
-	: GOTO IDENTIFIER ';'
-	| CONTINUE ';'
-	| BREAK ';'
-	| RETURN ';'
-	| RETURN expression ';'
+	: GOTO IDENTIFIER ';' {
+		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+	}
+	| CONTINUE ';' {
+		$$.str = newStr("%s;\n", $1.str);
+	}
+	| BREAK ';' {
+		$$.str = newStr("%s;\n", $1.str);
+	}
+	| RETURN ';' {
+		$$.str = newStr("%s;\n", $1.str);
+	}
+	| RETURN expression ';' {
+		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+	}
 	;
 
 translation_unit
-	: external_declaration
-	| translation_unit external_declaration
+	: external_declaration {
+		$$.str = newStr("%s", $1.str);
+		printf("%s\n", $$.str);
+	}
+	| translation_unit external_declaration {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+		printf("%s\n", $2.str);
+	}
 	;
 
 external_declaration
-	: function_definition
-	| declaration
+	: function_definition {
+		$$.str = newStr("%s", $1.str);
+	}
+	| declaration {
+		$$.str = newStr("%s", $1.str);
+	}
 	;
 
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement
-	| declaration_specifiers declarator compound_statement
+	: declaration_specifiers declarator declaration_list compound_statement {
+		$$.str = newStr("%s %s\n%s%s", $1.str, $2.str, $3.str, $4.str);
+	}
+	| declaration_specifiers declarator compound_statement {
+		$$.str = newStr("%s %s\n%s", $1.str, $2.str, $3.str);
+	}
 	;
 
 declaration_list
-	: declaration
-	| declaration_list declaration
+	: declaration {
+		$$.str = newStr("%s", $1.str);
+	}
+	| declaration_list declaration {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+	}
 	;
 
 %%
@@ -926,7 +1161,7 @@ char* newStr(char const *fmt, ...)
 	int count = 0;
 
 	int length = 0;
-	int currentBufferSize = 512;
+	int currentBufferSize = 64;
 
 	char *buffer = malloc(sizeof(char) * 512);
 
