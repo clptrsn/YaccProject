@@ -47,30 +47,38 @@ void yyerror(char *s);
 primary_expression
 	: IDENTIFIER {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| constant {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| string {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| '(' expression ')' {
 		$$.str = newStr("(%s)", $2.str);
+		free($2.str);
 	}
 	| generic_selection {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 constant
 	: I_CONSTANT		/* includes character_constant */ {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| F_CONSTANT {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| ENUMERATION_CONSTANT	/* after it has been defined as such */ {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
@@ -79,255 +87,380 @@ enumeration_constant		/* before it has been defined as such */
 		add_type($1.str, ENUMERATION_CONSTANT);
 
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 string
 	: STRING_LITERAL {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| FUNC_NAME {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 generic_selection
 	: GENERIC '(' assignment_expression ',' generic_assoc_list ')' {
 		$$.str = newStr("%s(%s,%s)", $1.str, $3.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($5.str);
 	}
 	;
 
 generic_assoc_list
 	: generic_association {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| generic_assoc_list ',' generic_association {
 		$$.str = newStr("%s, $s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 generic_association
 	: type_name ':' assignment_expression {
 		$$.str = newStr("%s: %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| DEFAULT ':' assignment_expression {
 		$$.str = newStr("%s: %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 postfix_expression
 	: primary_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| postfix_expression '[' expression ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| postfix_expression '(' ')' {
 		$$.str = newStr("%s()", $1.str);
+		free($1.str);
 	}
 	| postfix_expression '(' argument_expression_list ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| postfix_expression '.' IDENTIFIER {
 		$$.str = newStr("%s.%s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| postfix_expression PTR_OP IDENTIFIER {
 		$$.str = newStr("%s%s%s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	| postfix_expression INC_OP {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| postfix_expression DEC_OP {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| '(' type_name ')' '{' initializer_list '}' {
 		$$.str = newStr("(%s) { %s }", $2.str, $5.str);
+		free($2.str);
+		free($5.str);
 	}
 	| '(' type_name ')' '{' initializer_list ',' '}' {
 		$$.str = newStr("(%s) { %s, }", $2.str, $5.str);
+		free($2.str);
+		free($5.str);
 	}
 	;
 
 argument_expression_list
 	: assignment_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| argument_expression_list ',' assignment_expression {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 unary_expression
 	: postfix_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| INC_OP unary_expression {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| DEC_OP unary_expression {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| unary_operator cast_expression {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| SIZEOF unary_expression {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| SIZEOF '(' type_name ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| ALIGNOF '(' type_name ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 unary_operator
-	: '&'
-	| '*'
-	| '+'
-	| '-'
-	| '~'
-	| '!'
+	: '&' {
+		$$.str = newStr("&");
+	}
+	| '*' {
+		$$.str = newStr("*");
+	}
+	| '+' {
+		$$.str = newStr("+");
+	}
+	| '-' {
+		$$.str = newStr("-");
+	}
+	| '~' {
+		$$.str = newStr("~");
+	}
+	| '!' {
+		$$.str = newStr("!");
+	}
 	;
 
 cast_expression
 	: unary_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| '(' type_name ')' cast_expression {	
 		$$.str = newStr("(%s) %s", $2.str, $4.str);
+		free($2.str);
+		free($4.str);
 	}
 	;
 
 multiplicative_expression
 	: cast_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| multiplicative_expression '*' cast_expression {
 		$$.str = newStr("%s * %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| multiplicative_expression '/' cast_expression {
 		$$.str = newStr("%s / %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| multiplicative_expression '%' cast_expression {
 		$$.str = newStr("%s % %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 additive_expression
 	: multiplicative_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| additive_expression '+' multiplicative_expression {
 		$$.str = newStr("%s + %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| additive_expression '-' multiplicative_expression {
 		$$.str = newStr("%s - %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 shift_expression
 	: additive_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| shift_expression LEFT_OP additive_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	| shift_expression RIGHT_OP additive_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 relational_expression
 	: shift_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| relational_expression '<' shift_expression {
 		$$.str = newStr("%s < %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| relational_expression '>' shift_expression {
 		$$.str = newStr("%s > %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| relational_expression LE_OP shift_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	| relational_expression GE_OP shift_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 equality_expression
 	: relational_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| equality_expression EQ_OP relational_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	| equality_expression NE_OP relational_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 and_expression
 	: equality_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| and_expression '&' equality_expression {
 		$$.str = newStr("%s & %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 exclusive_or_expression
 	: and_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| exclusive_or_expression '^' and_expression {
 		$$.str = newStr("%s ^ %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| inclusive_or_expression '|' exclusive_or_expression {
 		$$.str = newStr("%s | %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 logical_and_expression
 	: inclusive_or_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| logical_and_expression AND_OP inclusive_or_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 logical_or_expression
 	: logical_and_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| logical_or_expression OR_OP logical_and_expression {
 		$$.str = newStr("%s %s %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 conditional_expression
 	: logical_or_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| logical_or_expression '?' expression ':' conditional_expression {
 		$$.str = newStr("%s ? %s : %s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 assignment_expression
 	: conditional_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| unary_expression assignment_operator assignment_expression {
 		$$.str = newStr("%s%s%s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
@@ -337,57 +470,74 @@ assignment_operator
 	}
 	| MUL_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| DIV_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| MOD_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| ADD_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| SUB_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| LEFT_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| RIGHT_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| AND_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| XOR_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| OR_ASSIGN  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 expression
 	: assignment_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| expression ',' assignment_expression {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 constant_expression
 	: conditional_expression	/* with constraints */  {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 declaration
 	: declaration_specifiers ';' {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	| declaration_specifiers init_declarator_list ';' {
 		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 
 		if(hasTypedef == 1)
 		{
@@ -397,39 +547,55 @@ declaration
 	}
 	| static_assert_declaration {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	;
 
 declaration_specifiers
 	: storage_class_specifier declaration_specifiers {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| storage_class_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| type_specifier declaration_specifiers {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| type_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| type_qualifier declaration_specifiers {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| type_qualifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| function_specifier declaration_specifiers {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| function_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| alignment_specifier declaration_specifiers {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| alignment_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
@@ -437,9 +603,12 @@ init_declarator_list
 	: init_declarator {
 		strcpy($$.id, $1.id);
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| init_declarator_list ',' init_declarator {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
@@ -447,10 +616,13 @@ init_declarator
 	: declarator '=' initializer {
 		strcpy($$.id, $1.id);
 		$$.str = newStr("%s = %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| declarator {
 		strcpy($$.id, $1.id);
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
@@ -458,235 +630,318 @@ storage_class_specifier
 	: TYPEDEF	/* identifiers must be flagged as TYPEDEF_NAME */{
 		hasTypedef = 1;
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| EXTERN {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| STATIC {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| THREAD_LOCAL {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| AUTO {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| REGISTER {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 type_specifier
 	: VOID {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| CHAR {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| SHORT {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| INT {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| LONG {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| FLOAT {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| DOUBLE {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| SIGNED {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| UNSIGNED {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| BOOL {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| COMPLEX {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| IMAGINARY	  	/* non-mandated extension */ {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| atomic_type_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| struct_or_union_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| enum_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| TYPEDEF_NAME		/* after it has been defined as such */ {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 struct_or_union_specifier
 	: struct_or_union '{' struct_declaration_list '}' {
 		$$.str = newStr("%s {\n%s}", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| struct_or_union IDENTIFIER '{' struct_declaration_list '}' {
 		$$.str = newStr("%s %s {\n%s}", $1.str, $2.str, $4.str);
+		free($1.str);
+		free($2.str);
+		free($4.str);
 	}
 	| struct_or_union IDENTIFIER {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
 struct_or_union
 	: STRUCT {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| UNION {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 struct_declaration_list
 	: struct_declaration {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| struct_declaration_list struct_declaration {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
 struct_declaration
 	: specifier_qualifier_list ';'	/* for anonymous struct/union */  {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	| specifier_qualifier_list struct_declarator_list ';' {
 		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| static_assert_declaration {
 		$$.str = newStr("%s\n;", $1.str);
+		free($1.str);
 	}
 	;
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| type_specifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| type_qualifier specifier_qualifier_list {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| type_qualifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 struct_declarator_list
 	: struct_declarator {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| struct_declarator_list ',' struct_declarator {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 struct_declarator
 	: ':' constant_expression {
 		$$.str = newStr(":%s", $2.str);
+		free($2.str);
 	}
 	| declarator ':' constant_expression {
 		$$.str = newStr("%s: %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| declarator {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 enum_specifier
 	: ENUM '{' enumerator_list '}' {
 		$$.str = newStr("%s { %s }", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| ENUM '{' enumerator_list ',' '}' {
 		$$.str = newStr("%s { %s , }", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| ENUM IDENTIFIER '{' enumerator_list '}' {
 		$$.str = newStr("%s %s { %s }", $1.str, $2.str, $4.str);
+		free($1.str);
+		free($2.str);
+		free($4.str);
 	}
 	| ENUM IDENTIFIER '{' enumerator_list ',' '}' {
 		$$.str = newStr("%s %s { %s , }", $1.str, $2.str, $4.str);
+		free($1.str);
+		free($2.str);
+		free($4.str);
 	}
 	| ENUM IDENTIFIER {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 enumerator_list
 	: enumerator {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| enumerator_list ',' enumerator {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
 	: enumeration_constant '=' constant_expression {
 		$$.str = newStr("%s = %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| enumeration_constant {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 atomic_type_specifier
 	: ATOMIC '(' type_name ')' {
 		$$.str = newStr("%s(%s) ", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 type_qualifier
 	: CONST {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| RESTRICT {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| VOLATILE {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| ATOMIC {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 function_specifier
 	: INLINE {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| NORETURN {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 alignment_specifier
 	: ALIGNAS '(' type_name ')' {
 		$$.str = newStr("%s(%s) ", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| ALIGNAS '(' constant_expression ')' {
 		$$.str = newStr("%s(%s) ", $1.str, $3.str);		
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 declarator
 	: pointer direct_declarator {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 		strcpy($$.id, $2.id);
 	}
 	| direct_declarator {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 		strcpy($$.id, $1.id);
 	}
 	;
@@ -694,58 +949,87 @@ declarator
 direct_declarator
 	: IDENTIFIER {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 		strcpy($$.id, $1.str);
 	}
 	| '(' declarator ')' {
 		$$.str = newStr("(%s)", $2.str);
+		free($2.str);
 		strcpy($$.id, $2.str);
 	}
 	| direct_declarator '[' ']' {
 		$$.str = newStr("%s[]", $1.str);
+		free($1.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' '*' ']' {
 		$$.str = newStr("%s[*]", $1.str);
+		free($1.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($5.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' STATIC assignment_expression ']' {
 		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' type_qualifier_list '*' ']' {
 		$$.str = newStr("%s[%s*]", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']' {
 		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($5.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' type_qualifier_list ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '[' assignment_expression ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '(' parameter_type_list ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '(' ')' {
 		$$.str = newStr("%s()", $1.str);
+		free($1.str);
 		strcpy($$.id, $1.str);
 	}
 	| direct_declarator '(' identifier_list ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 		strcpy($$.id, $1.str);
 	}
 	;
@@ -753,12 +1037,16 @@ direct_declarator
 pointer
 	: '*' type_qualifier_list pointer {
 		$$.str = newStr("*%s %s", $2.str, $3.str);
+		free($2.str);
+		free($3.str);
 	}
 	| '*' type_qualifier_list {
 		$$.str = newStr("*%s", $2.str);
+		free($2.str);
 	}
 	| '*' pointer {
 		$$.str = newStr("*%s", $2.str);
+		free($2.str);
 	}
 	| '*' {
 		$$.str = newStr("*");
@@ -768,9 +1056,12 @@ pointer
 type_qualifier_list
 	: type_qualifier {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| type_qualifier_list type_qualifier {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
@@ -778,66 +1069,88 @@ type_qualifier_list
 parameter_type_list
 	: parameter_list ',' ELLIPSIS {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| parameter_list {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 parameter_list
 	: parameter_declaration {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| parameter_list ',' parameter_declaration {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 parameter_declaration
 	: declaration_specifiers declarator {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| declaration_specifiers abstract_declarator {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| declaration_specifiers {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 identifier_list
 	: IDENTIFIER {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| identifier_list ',' IDENTIFIER {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 type_name
 	: specifier_qualifier_list abstract_declarator {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| specifier_qualifier_list {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 abstract_declarator
 	: pointer direct_abstract_declarator {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| pointer {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| direct_abstract_declarator {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 direct_abstract_declarator
 	: '(' abstract_declarator ')' {
 		$$.str = newStr("(%s)", $2.str);
+		free($2.str);
 	}
 	| '[' ']' {
 		$$.str = newStr("[]");
@@ -847,147 +1160,215 @@ direct_abstract_declarator
 	}
 	| '[' STATIC type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("[%s %s %s]", $2.str, $3.str, $4.str);
+		free($2.str);
+		free($3.str);
+		free($4.str);
 	}
 	| '[' STATIC assignment_expression ']' {
 		$$.str = newStr("[%s %s]", $2.str, $3.str);
+		free($2.str);
+		free($3.str);
 	}
 	| '[' type_qualifier_list STATIC assignment_expression ']' {
 		$$.str = newStr("[%s %s %s]", $2.str, $3.str, $4.str);
+		free($2.str);
+		free($3.str);
+		free($4.str);
 	}
 	| '[' type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("[%s %s]", $2.str, $3.str);
+		free($2.str);
+		free($3.str);
 	}
 	| '[' type_qualifier_list ']' {
 		$$.str = newStr("[%s]", $2.str);
+		free($2.str);
 	}
 	| '[' assignment_expression ']' {
 		$$.str = newStr("[%s]", $2.str);
+		free($2.str);
 	}
 	| direct_abstract_declarator '[' ']' {
 		$$.str = newStr("%s[]", $1.str);
+		free($1.str);
 	}
 	| direct_abstract_declarator '[' '*' ']' {
 		$$.str = newStr("%s[*]", $1.str);
+		free($1.str);
 	}
 	| direct_abstract_declarator '[' STATIC type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($5.str);
 	}
 	| direct_abstract_declarator '[' STATIC assignment_expression ']' {
 		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
 	}
 	| direct_abstract_declarator '[' type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
 	}
 	| direct_abstract_declarator '[' type_qualifier_list STATIC assignment_expression ']' {
 		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($5.str);
 	}
 	| direct_abstract_declarator '[' type_qualifier_list ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| direct_abstract_declarator '[' assignment_expression ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| '(' ')' {
 		$$.str = newStr("()");
 	}
 	| '(' parameter_type_list ')' {
 		$$.str = newStr("(%s)", $2.str);
+		free($2.str);
 	}
 	| direct_abstract_declarator '(' ')' {
 		$$.str = newStr("%s()", $1.str);
+		free($1.str);
 	}
 	| direct_abstract_declarator '(' parameter_type_list ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 initializer
 	: '{' initializer_list '}' {
 		$$.str = newStr("{ %s }", $2.str);
+		free($2.str);
 	}
 	| '{' initializer_list ',' '}' {
 		$$.str = newStr("{ %s , }", $2.str);
+		free($2.str);
 	}
 	| assignment_expression {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 initializer_list
 	: designation initializer {
 		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| initializer {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| initializer_list ',' designation initializer {
 		$$.str = newStr("%s, %s %s", $1.str, $3.str, $4.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
 	}
 	| initializer_list ',' initializer {
 		$$.str = newStr("%s, %s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
 designation
 	: designator_list '=' {
 		$$.str = newStr("%s =", $1.str);
+		free($1.str);
 	}
 	;
 
 designator_list
 	: designator {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| designator_list designator {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
 designator
 	: '[' constant_expression ']' {
 		$$.str = newStr("[%s]", $2.str);
+		free($2.str);
 	}
 	| '.' IDENTIFIER {
 		$$.str = newStr(".%s", $2.str);
+		free($2.str);
 	}
 	;
 
 static_assert_declaration
 	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';' {
 		$$.str = newStr("%s(%s, %s);\n", $1.str, $3.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($5.str);
 	}
 	;
 
 statement
 	: labeled_statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| compound_statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| expression_statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| selection_statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| iteration_statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| jump_statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 labeled_statement
 	: IDENTIFIER ':' statement {
 		$$.str = newStr("%s:\n%s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| CASE constant_expression ':' statement {
 		$$.str = newStr("%s %s:\n%s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	| DEFAULT ':' statement {
 		$$.str = newStr("%s:\n%s", $1.str, $3.str);
+		free($1.str);
+		free($3.str);
 	}
 	;
 
@@ -997,24 +1378,30 @@ compound_statement
 	}
 	| '{'  block_item_list '}' {
 		$$.str = newStr("{\n%s}", $2.str);
+		free($2.str);
 	}
 	;
 
 block_item_list
 	: block_item {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| block_item_list block_item {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
 block_item
 	: declaration {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| statement {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
@@ -1024,95 +1411,154 @@ expression_statement
 	}
 	| expression ';' {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	;
 
 selection_statement
 	: IF '(' expression ')' statement ELSE statement {
 		$$.str = newStr("%s(%s)\n%s\n%s\n%s\n", $1.str, $3.str, $5.str, $6.str, $7.str);
+		free($1.str);
+		free($3.str);
+		free($5.str);
+		free($6.str);
+		free($7.str);
 	}
 	| IF '(' expression ')' statement {
 		$$.str = newStr("%s(%s)\n%s\n", $1.str, $3.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($5.str);
 	}
 	| SWITCH '(' expression ')' statement {
 		$$.str = newStr("%s(%s)\n%s\n", $1.str, $3.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($5.str);
 	}
 	;
 
 iteration_statement
 	: WHILE '(' expression ')' statement {
 		$$.str = newStr("%s(%s)\n%s\n", $1.str, $3.str, $5.str);
+		free($1.str);
+		free($3.str);
+		free($5.str);
 	}
 	| DO statement WHILE '(' expression ')' ';' {
 		$$.str = newStr("%s\n%s\n%s(%s);\n", $1.str, $2.str, $3.str, $5.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
+		free($5.str);
 	}
 	| FOR '(' expression_statement expression_statement ')' statement {
 		$$.str = newStr("%s(%s %s)\n%s\n", $1.str, $3.str, $4.str, $6.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($6.str);
 	}
 	| FOR '(' expression_statement expression_statement expression ')' statement {
 		$$.str = newStr("%s(%s %s %s)\n%s\n", $1.str, $3.str, $4.str, $5.str, $7.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($5.str);
+		free($7.str);
 	}
 	| FOR '(' declaration expression_statement ')' statement {
 		$$.str = newStr("%s(%s %s)\n%s\n", $1.str, $3.str, $4.str, $6.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($6.str);
 	}
 	| FOR '(' declaration expression_statement expression ')' statement {
 		$$.str = newStr("%s(%s %s %s)\n%s\n", $1.str, $3.str, $4.str, $5.str, $7.str);
+		free($1.str);
+		free($3.str);
+		free($4.str);
+		free($5.str);
+		free($7.str);
 	}
 	;
 
 jump_statement
 	: GOTO IDENTIFIER ';' {
 		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	| CONTINUE ';' {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	| BREAK ';' {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	| RETURN ';' {
 		$$.str = newStr("%s;\n", $1.str);
+		free($1.str);
 	}
 	| RETURN expression ';' {
 		$$.str = newStr("%s %s;\n", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
 translation_unit
 	: external_declaration {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 		printf("%s\n", $$.str);
 	}
 	| translation_unit external_declaration {
 		$$.str = newStr("%s%s", $1.str, $2.str);
 		printf("%s\n", $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
 external_declaration
 	: function_definition {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| declaration {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	;
 
 function_definition
 	: declaration_specifiers declarator declaration_list compound_statement {
 		$$.str = newStr("%s %s\n%s%s", $1.str, $2.str, $3.str, $4.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
+		free($4.str);
 	}
 	| declaration_specifiers declarator compound_statement {
 		$$.str = newStr("%s %s\n%s", $1.str, $2.str, $3.str);
+		free($1.str);
+		free($2.str);
+		free($3.str);
 	}
 	;
 
 declaration_list
 	: declaration {
 		$$.str = newStr("%s", $1.str);
+		free($1.str);
 	}
 	| declaration_list declaration {
 		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
 	}
 	;
 
@@ -1163,13 +1609,13 @@ char* newStr(char const *fmt, ...)
 	int length = 0;
 	int currentBufferSize = 64;
 
-	char *buffer = malloc(sizeof(char) * 512);
+	char *buffer = malloc(sizeof(char) * currentBufferSize);
 
 	while(ch = fmt[count])
 	{
 		if(length > currentBufferSize - 2)
 		{
-			buffer = realloc(buffer, 2*currentBufferSize);
+			buffer = realloc(buffer, sizeof(char) * 2*currentBufferSize);
 			currentBufferSize = 2*currentBufferSize;
 		}
 		if(ch == '%')
@@ -1190,7 +1636,7 @@ char* newStr(char const *fmt, ...)
 					param_length = strlen(string_temp);
 					while(length + param_length + 1 > currentBufferSize)
 					{
-						buffer = realloc(buffer, sizeof(2*currentBufferSize));
+						buffer = realloc(buffer, sizeof(char) * 2*currentBufferSize);
 						currentBufferSize = 2*currentBufferSize;	
 					}
 					buffer[length] = '\0';
@@ -1203,7 +1649,7 @@ char* newStr(char const *fmt, ...)
 					param_length = getDigitCount(int_temp);
 					while(length + param_length + 1 > currentBufferSize)
 					{
-						buffer = realloc(buffer, sizeof(2*currentBufferSize));
+						buffer = realloc(buffer, sizeof(char) * 2*currentBufferSize);
 						currentBufferSize = 2*currentBufferSize;	
 					}
 					sprintf(&buffer[length], "%d", int_temp);
