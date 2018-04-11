@@ -246,6 +246,14 @@ std::string simplecpp::TokenList::stringify() const
     for (const Token *tok = cfront(); tok; tok = tok->next) {
         if (tok->location.line < loc.line || tok->location.fileIndex != loc.fileIndex) {
             ret << "\n#line " << tok->location.line << " \"" << tok->location.file() << "\"\n";
+            if(tok->location.file().find("/") != std::string::npos)
+            {
+                ret << "#SYSPROGRAM" << "\n";
+            }
+            else
+            {
+                ret << "#USERPROGRAM" << "\n";
+            }
             loc = tok->location;
         }
 
@@ -2291,7 +2299,7 @@ void simplecpp::preprocess(simplecpp::TokenList &output, const simplecpp::TokenL
     // TRUE => code in current #if block should be kept
     // ELSE_IS_TRUE => code in current #if block should be dropped. the code in the #else should be kept.
     // ALWAYS_FALSE => drop all code in #if and #else
-    enum IfState { TRUE, ELSE_IS_TRUE, ALWAYS_FALSE };
+    enum IfState { TRUE, ELSE_IS_TRUE, ALWAYS_FALSE, KEEP_IFDEF };
     std::stack<int> ifstates;
     ifstates.push(TRUE);
 
@@ -2532,11 +2540,20 @@ void simplecpp::preprocess(simplecpp::TokenList &output, const simplecpp::TokenL
 
                 if (rawtok->str != ELIF) {
                     // push a new ifstate..
-                    if (ifstates.top() != TRUE)
+                    if (ifstates.top() != TRUE && ifstates.top() != KEEP_IFDEF)
                         ifstates.push(ALWAYS_FALSE);
                     else
                     {
-                        ifstates.push(conditionIsTrue ? TRUE : ELSE_IS_TRUE);
+                        if(rawtok->next->str == "OMITBAD" || rawtok->next->str == "OMITGOOD")
+                        {
+                            ifstates.push(KEEP_IFDEF);
+                            Location omitLoc(rawtok->location);
+                            output.push_back(new Token("#" + rawtok->str + " " + rawtok->next->str, omitLoc));
+                        }
+                        else 
+                        {
+                            ifstates.push(conditionIsTrue ? TRUE : ELSE_IS_TRUE);
+                        }
                     }
                 } else if (ifstates.top() == TRUE) {
                     ifstates.top() = ALWAYS_FALSE;
@@ -2546,6 +2563,10 @@ void simplecpp::preprocess(simplecpp::TokenList &output, const simplecpp::TokenL
             } else if (rawtok->str == ELSE) {
                 ifstates.top() = (ifstates.top() == ELSE_IS_TRUE) ? TRUE : ALWAYS_FALSE;
             } else if (rawtok->str == ENDIF) {
+                if(ifstates.top() == KEEP_IFDEF) {
+                    Location omitLoc(rawtok->location);
+                    output.push_back(new Token("#endif", omitLoc));
+                }
                 ifstates.pop();
             } else if (rawtok->str == UNDEF) {
                 if (ifstates.top() == TRUE) {
@@ -2562,7 +2583,7 @@ void simplecpp::preprocess(simplecpp::TokenList &output, const simplecpp::TokenL
             continue;
         }
 
-        if (ifstates.top() != TRUE) {
+        if (ifstates.top() != TRUE && ifstates.top() != KEEP_IFDEF) {
             // drop code
             rawtok = gotoNextLine(rawtok);
             continue;
