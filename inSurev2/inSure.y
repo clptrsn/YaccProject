@@ -179,12 +179,12 @@ postfix_expression
 		free($2.str);
 	}
 	| '(' type_name ')' '{' initializer_list '}' {
-		$$.str = newStr("(%s) { %s }", $2.str, $5.str);
+		$$.str = newStr("(%s) $BEGIN %s $END", $2.str, $5.str);
 		free($2.str);
 		free($5.str);
 	}
 	| '(' type_name ')' '{' initializer_list ',' '}' {
-		$$.str = newStr("(%s) { %s, }", $2.str, $5.str);
+		$$.str = newStr("(%s) $BEGIN %s, $END", $2.str, $5.str);
 		free($2.str);
 		free($5.str);
 	}
@@ -726,12 +726,12 @@ type_specifier
 
 struct_or_union_specifier
 	: struct_or_union '{' struct_declaration_list '}' {
-		$$.str = newStr("%s {\n%s}", $1.str, $3.str);
+		$$.str = newStr("%s $BEGIN\n%s$END", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
 	}
 	| struct_or_union IDENTIFIER '{' struct_declaration_list '}' {
-		$$.str = newStr("%s %s {\n%s}", $1.str, $2.str, $4.str);
+		$$.str = newStr("%s %s $BEGIN\n%s$END", $1.str, $2.str, $4.str);
 		free($1.str);
 		free($2.str);
 		free($4.str);
@@ -833,23 +833,23 @@ struct_declarator
 
 enum_specifier
 	: ENUM '{' enumerator_list '}' {
-		$$.str = newStr("%s { %s }", $1.str, $3.str);
+		$$.str = newStr("%s $BEGIN %s $END", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
 	}
 	| ENUM '{' enumerator_list ',' '}' {
-		$$.str = newStr("%s { %s , }", $1.str, $3.str);
+		$$.str = newStr("%s $BEGIN %s , $END", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
 	}
 	| ENUM IDENTIFIER '{' enumerator_list '}' {
-		$$.str = newStr("%s %s { %s }", $1.str, $2.str, $4.str);
+		$$.str = newStr("%s %s $BEGIN %s $END", $1.str, $2.str, $4.str);
 		free($1.str);
 		free($2.str);
 		free($4.str);
 	}
 	| ENUM IDENTIFIER '{' enumerator_list ',' '}' {
-		$$.str = newStr("%s %s { %s , }", $1.str, $2.str, $4.str);
+		$$.str = newStr("%s %s $BEGIN %s , $END", $1.str, $2.str, $4.str);
 		free($1.str);
 		free($2.str);
 		free($4.str);
@@ -1256,11 +1256,11 @@ direct_abstract_declarator
 
 initializer
 	: '{' initializer_list '}' {
-		$$.str = newStr("{ %s }", $2.str);
+	$$.str = newStr("$BEGIN %s $END", $2.str);
 		free($2.str);
 	}
 	| '{' initializer_list ',' '}' {
-		$$.str = newStr("{ %s , }", $2.str);
+		$$.str = newStr("$BEGIN %s , $END", $2.str);
 		free($2.str);
 	}
 	| assignment_expression {
@@ -1395,10 +1395,10 @@ labeled_statement
 
 compound_statement
 	: '{' '}' {
-		$$.str = newStr("{\n}");
+		$$.str = newStr("$BEGIN\n$END");
 	}
 	| '{'  block_item_list '}' {
-		$$.str = newStr("{\n%s}", $2.str);
+		$$.str = newStr("$BEGIN\n%s$END", $2.str);
 		free($2.str);
 	}
 	;
