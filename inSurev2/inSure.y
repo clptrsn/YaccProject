@@ -719,7 +719,7 @@ type_specifier
 		free($1.str);
 	}
 	| TYPEDEF_NAME		/* after it has been defined as such */ {
-		$$.str = newStr("%s", $1.str);
+		$$.str = newStr("STRUCT");
 		free($1.str);
 	}
 	;
@@ -1040,20 +1040,20 @@ direct_declarator
 
 pointer
 	: '*' type_qualifier_list pointer {
-		$$.str = newStr("*%s %s", $2.str, $3.str);
+		$$.str = newStr("%s %s PTR", $2.str, $3.str);
 		free($2.str);
 		free($3.str);
 	}
 	| '*' type_qualifier_list {
-		$$.str = newStr("*%s", $2.str);
+		$$.str = newStr("%s PTR", $2.str);
 		free($2.str);
 	}
 	| '*' pointer {
-		$$.str = newStr("*%s", $2.str);
+		$$.str = newStr("%s PTR", $2.str);
 		free($2.str);
 	}
 	| '*' {
-		$$.str = newStr("*");
+		$$.str = newStr("PTR");
 	}
 	;
 
