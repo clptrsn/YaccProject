@@ -1,18 +1,23 @@
 #include<stdio.h>
 typedef struct testDef {
 	int x;
-} s;
+} yams;
 
 enum X {
 	MONDAY = 0,
 	TUESDAY = 1
-}
+};
 
+#ifndef OMITBAD
 int main()
 {
-#ifdef TEST
-s A;
+
+#ifndef OMITGOOD
+
+yams A;
 MONDAY;
-printf("test");
+
 #endif
+printf("test");
 }
+#endif

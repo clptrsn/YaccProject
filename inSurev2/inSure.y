@@ -15,6 +15,8 @@
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
+%token IFNDEF ENDIF OMITGOOD OMITBAD
+
 %start translation_unit
 %{
 #include <stdio.h>
@@ -543,6 +545,7 @@ declaration
 		{
 			add_type($2.id, TYPEDEF_NAME);
 		}
+		
 		hasTypedef = 0;
 	}
 	| static_assert_declaration {
@@ -949,23 +952,24 @@ declarator
 direct_declarator
 	: IDENTIFIER {
 		$$.str = newStr("%s", $1.str);
-		free($1.str);
 		strcpy($$.id, $1.str);
+		free($1.str);
+		
 	}
 	| '(' declarator ')' {
 		$$.str = newStr("(%s)", $2.str);
 		free($2.str);
-		strcpy($$.id, $2.str);
+		strcpy($$.id, $2.id);
 	}
 	| direct_declarator '[' ']' {
 		$$.str = newStr("%s[]", $1.str);
 		free($1.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' '*' ']' {
 		$$.str = newStr("%s[*]", $1.str);
 		free($1.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
@@ -973,20 +977,20 @@ direct_declarator
 		free($3.str);
 		free($4.str);
 		free($5.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' STATIC assignment_expression ']' {
 		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
 		free($1.str);
 		free($3.str);
 		free($4.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list '*' ']' {
 		$$.str = newStr("%s[%s*]", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']' {
 		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
@@ -994,43 +998,43 @@ direct_declarator
 		free($3.str);
 		free($4.str);
 		free($5.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list assignment_expression ']' {
 		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
 		free($1.str);
 		free($3.str);
 		free($4.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' assignment_expression ']' {
 		$$.str = newStr("%s[%s]", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '(' parameter_type_list ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '(' ')' {
 		$$.str = newStr("%s()", $1.str);
 		free($1.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '(' identifier_list ')' {
 		$$.str = newStr("%s(%s)", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
-		strcpy($$.id, $1.str);
+		strcpy($$.id, $1.id);
 	}
 	;
 
@@ -1352,6 +1356,23 @@ statement
 		$$.str = newStr("%s", $1.str);
 		free($1.str);
 	}
+	| ifdef_statement {
+		$$.str = newStr("%s", $1.str);
+		free($1.str);
+	}
+	;
+
+ifdef_statement
+	: IFNDEF OMITGOOD statement ENDIF {
+		$$.str = newStr("%s", $3.str);
+		free($3.str);
+		
+	}
+	| IFNDEF OMITBAD statement ENDIF {
+		$$.str = newStr("%s", $3.str);
+		free($3.str);
+		
+	}
 	;
 
 labeled_statement
@@ -1529,6 +1550,10 @@ external_declaration
 		free($1.str);
 	}
 	| declaration {
+		$$.str = newStr("%s", $1.str);
+		free($1.str);
+	}
+	| ifdef_statement {
 		$$.str = newStr("%s", $1.str);
 		free($1.str);
 	}

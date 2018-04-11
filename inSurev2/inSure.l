@@ -1,4 +1,3 @@
-
 O   [0-7]
 D   [0-9]
 NZ  [1-9]
@@ -39,6 +38,10 @@ static int check_type(void);
 %}
 
 %%
+"#ifndef"               {  yylval.str = newStr("%s", yytext);return(IFNDEF); }
+"#endif"                {  yylval.str = newStr("%s", yytext);return(ENDIF); }
+"OMITGOOD"              { yylval.str = newStr("%s", yytext);return(OMITGOOD); }
+"OMITBAD"               { yylval.str = newStr("%s", yytext);return(OMITBAD); }
 #[^\n]*
 
 "/*"                                    { comment(); }
@@ -194,4 +197,3 @@ static int check_type(void)
             return IDENTIFIER;
     }
 }
-
