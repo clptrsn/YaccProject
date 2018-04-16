@@ -15,6 +15,15 @@ struct symTable {
 
 struct symTable* SYMBOL_TABLE;
 
+void print_symtable() {
+	struct symTableData* walk = SYMBOL_TABLE->head;
+	while(walk != NULL)
+	{
+		//printf("%s %d\n", walk->name, walk->type);
+		walk = walk->next;
+	}
+}
+
 void init_symtable()
 {
 	SYMBOL_TABLE = malloc(sizeof(struct symTable));

@@ -17,6 +17,7 @@ WS  [ \t\v\n\f]
 %{
 #include <stdio.h>
 #include "symtab.c"
+#include "functab.c"
 
 typedef struct {
     int ival;
@@ -42,11 +43,13 @@ static int check_type(void);
 "#endif"                {  yylval.str = newStr("%s", yytext);return(ENDIF); }
 "OMITGOOD"              { yylval.str = newStr("%s", yytext);return(OMITGOOD); }
 "OMITBAD"               { yylval.str = newStr("%s", yytext);return(OMITBAD); }
+#USERPROGRAM            { yylval.str = newStr("%s", yytext);return(USERPROGRAM); }
+#SYSPROGRAM             { yylval.str = newStr("%s", yytext);return(SYSPROGRAM); }
 #[^\n]*
 
 "/*"                                    { comment(); }
 "//".*                                    { /* consume //-comment */ }
-
+"__extension__"
 "auto"					{ yylval.str = newStr("%s", yytext);return(AUTO); }
 "break"					{ yylval.str = newStr("%s", yytext);return(BREAK); }
 "case"					{ yylval.str = newStr("%s", yytext);return(CASE); }
@@ -67,6 +70,7 @@ static int check_type(void);
 "int"					{ yylval.str = newStr("%s", yytext); return(INT); }
 "long"					{ yylval.str = newStr("%s", yytext); return(LONG); }
 "register"				{ yylval.str = newStr("%s", yytext); return(REGISTER); }
+"__restrict"            { yylval.str = newStr("%s", yytext); return(RESTRICT); }
 "restrict"				{ yylval.str = newStr("%s", yytext); return(RESTRICT); }
 "return"				{ yylval.str = newStr("%s", yytext); return(RETURN); }
 "short"					{ yylval.str = newStr("%s", yytext); return(SHORT); }
@@ -93,6 +97,8 @@ static int check_type(void);
 "_Thread_local"                         { yylval.str = newStr("%s", yytext); return THREAD_LOCAL; }
 "__func__"                              { yylval.str = newStr("%s", yytext); return FUNC_NAME; }
 
+"__builtin_va_list"     { yylval.str = newStr("%s", yytext); return TYPEDEF_NAME; }
+
 {L}{A}*					{yylval.str = newStr("%s", yytext); return check_type(); }
 
 {HP}{H}+{IS}?				{ yylval.str = newStr("%s", yytext); return I_CONSTANT; }
@@ -110,6 +116,7 @@ static int check_type(void);
 ({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ yylval.str = newStr("%s", yytext); return STRING_LITERAL; }
 
 "..."					{ yylval.str = newStr("%s", yytext); return ELLIPSIS; }
+". . ."                 { yylval.str = newStr("..."); return ELLIPSIS; }
 ">>="					{ yylval.str = newStr("%s", yytext); return RIGHT_ASSIGN; }
 "<<="					{ yylval.str = newStr("%s", yytext); return LEFT_ASSIGN; }
 "+="					{ yylval.str = newStr("%s", yytext); return ADD_ASSIGN; }

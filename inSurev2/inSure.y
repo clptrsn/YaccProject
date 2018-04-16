@@ -17,6 +17,8 @@
 
 %token IFNDEF ENDIF OMITGOOD OMITBAD
 
+%token USERPROGRAM SYSPROGRAM
+
 %start translation_unit
 %{
 #include <stdio.h>
@@ -32,13 +34,25 @@ typedef struct {
 
 #define YYSTYPE tstruct
 
+#define USER_DEFINED 0
+#define SYSTEM_DEFINED 1
+#define BANNED_DEFINED 2
+
 int hasTypedef = 0;
+int isUserCode = 1;
 
 extern void init_symtable();
 extern void add_type(char* id, int type);
 extern void add_table(char* id);
-extern void in_table(char* id);
+extern int in_table(char* id);
 extern int get_type(char* id);
+extern void print_symtable();
+
+extern void init_functable();
+extern void add_functype(char* id, int type);
+extern void add_functable(char* id);
+extern int in_functable(char* id);
+extern int get_functype(char* id);
 
 char* newStr(char const *fmt, ...);
 int yylex();
@@ -149,11 +163,33 @@ postfix_expression
 		free($3.str);
 	}
 	| postfix_expression '(' ')' {
-		$$.str = newStr("%s()", $1.str);
+		if(get_functype($1.str) == USER_DEFINED)
+		{
+			$$.str = newStr("userdefinedfunction()");
+		}
+		else if(get_functype($1.str) == BANNED_DEFINED)
+		{
+			$$.str = newStr("bannedfunction()");
+		}
+		else
+		{
+			$$.str = newStr("libraryfunction()");
+		}
 		free($1.str);
 	}
 	| postfix_expression '(' argument_expression_list ')' {
-		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		if(get_functype($1.str) == USER_DEFINED)
+		{
+			$$.str = newStr("userdefinedfunction(%s)", $3.str);
+		}
+		else if(get_functype($1.str) == BANNED_DEFINED)
+		{
+			$$.str = newStr("bannedfunction(%s)", $3.str);
+		}
+		else
+		{
+			$$.str = newStr("libraryfunction(%s)", $3.str);
+		}
 		free($1.str);
 		free($3.str);
 	}
@@ -741,6 +777,11 @@ struct_or_union_specifier
 		free($1.str);
 		free($2.str);
 	}
+	| struct_or_union TYPEDEF_NAME {
+		$$.str = newStr("%s %s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
+	}
 	;
 
 struct_or_union
@@ -937,7 +978,7 @@ alignment_specifier
 
 declarator
 	: pointer direct_declarator {
-		$$.str = newStr("%s %s", $1.str, $2.str);
+		$$.str = newStr("%s %s", $2.str, $1.str);
 		free($1.str);
 		free($2.str);
 		strcpy($$.id, $2.id);
@@ -962,17 +1003,17 @@ direct_declarator
 		strcpy($$.id, $2.id);
 	}
 	| direct_declarator '[' ']' {
-		$$.str = newStr("%s[]", $1.str);
+		$$.str = newStr("%s ARRAY", $1.str);
 		free($1.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' '*' ']' {
-		$$.str = newStr("%s[*]", $1.str);
+		$$.str = newStr("%s ARRAY", $1.str);
 		free($1.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']' {
-		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		$$.str = newStr("%s ARRAY size=%s", $1.str, $5.str);
 		free($1.str);
 		free($3.str);
 		free($4.str);
@@ -980,20 +1021,20 @@ direct_declarator
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' STATIC assignment_expression ']' {
-		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		$$.str = newStr("%s ARRAY size=%s", $1.str, $4.str);
 		free($1.str);
 		free($3.str);
 		free($4.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list '*' ']' {
-		$$.str = newStr("%s[%s*]", $1.str, $3.str);
+		$$.str = newStr("%s ARRAY", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list STATIC assignment_expression ']' {
-		$$.str = newStr("%s[%s %s %s]", $1.str, $3.str, $4.str, $5.str);
+		$$.str = newStr("%s ARRAY size=%s", $1.str, $5.str);
 		free($1.str);
 		free($3.str);
 		free($4.str);
@@ -1001,37 +1042,91 @@ direct_declarator
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list assignment_expression ']' {
-		$$.str = newStr("%s[%s %s]", $1.str, $3.str, $4.str);
+		$$.str = newStr("%s ARRAY", $1.str, $3.str, $4.str);
 		free($1.str);
 		free($3.str);
 		free($4.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' type_qualifier_list ']' {
-		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		$$.str = newStr("%s ARRAY", $1.str);
 		free($1.str);
 		free($3.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '[' assignment_expression ']' {
-		$$.str = newStr("%s[%s]", $1.str, $3.str);
+		$$.str = newStr("%s ARRAY size=%s", $1.str, $3.str);
 		free($1.str);
 		free($3.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '(' parameter_type_list ')' {
-		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		if(isUserCode)
+		{
+			add_functable($1.str);
+			add_functype($1.str, USER_DEFINED);
+			$$.str = newStr("userdefinedfunction(%s)", $3.str);
+		}
+		else
+		{
+			add_functable($1.str);
+			add_functype($1.str, SYSTEM_DEFINED);
+			if(get_functype($1.str) == BANNED_DEFINED)
+			{
+				$$.str = newStr("bannedfunction(%s)", $3.str);
+			}
+			else
+			{
+				$$.str = newStr("libraryfunction(%s)", $3.str);
+			}
+		}
 		free($1.str);
 		free($3.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '(' ')' {
-		$$.str = newStr("%s()", $1.str);
+		if(isUserCode)
+		{
+			add_functable($1.str);
+			add_functype($1.str, USER_DEFINED);
+			$$.str = newStr("userdefinedfunction()");
+		}
+		else
+		{
+			add_functable($1.str);
+			add_functype($1.str, SYSTEM_DEFINED);
+			if(get_functype($1.str) == BANNED_DEFINED)
+			{
+				$$.str = newStr("bannedfunction()");
+			}
+			else
+			{
+				$$.str = newStr("libraryfunction()");
+			}
+		}
 		free($1.str);
 		strcpy($$.id, $1.id);
 	}
 	| direct_declarator '(' identifier_list ')' {
-		$$.str = newStr("%s(%s)", $1.str, $3.str);
+		if(isUserCode)
+		{
+			add_functable($1.str);
+			add_functype($1.str, USER_DEFINED);
+			$$.str = newStr("userdefinedfunction(%s)", $3.str);
+		}
+		else
+		{
+			add_functable($1.str);
+			add_functype($1.str, SYSTEM_DEFINED);
+			if(get_functype($1.str) == BANNED_DEFINED)
+			{
+				$$.str = newStr("bannedfunction(%s)", $3.str);
+			}
+			else
+			{
+				$$.str = newStr("libraryfunction(%s)", $3.str);
+			}
+		}
 		free($1.str);
 		free($3.str);
 		strcpy($$.id, $1.id);
@@ -1557,6 +1652,14 @@ external_declaration
 		$$.str = newStr("%s", $1.str);
 		free($1.str);
 	}
+	| USERPROGRAM {
+		isUserCode = 1;
+		$$.str = newStr("");
+	}
+	| SYSPROGRAM {
+		isUserCode = 0;
+		$$.str = newStr("");
+	}
 	;
 
 function_definition
@@ -1592,9 +1695,11 @@ declaration_list
 #include <stdlib.h>
 #include <stdarg.h>
 
+
 int main()
 {
 	init_symtable();
+	init_functable();
 	yyparse();
 }
 
@@ -1699,4 +1804,6 @@ void yyerror(char *s)
 {
 	fflush(stdout);
 	fprintf(stderr, "*** %s\n", s);
+
+	print_symtable();
 }
