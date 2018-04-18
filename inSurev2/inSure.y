@@ -15,7 +15,7 @@
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
-%token IFNDEF ENDIF OMITGOOD OMITBAD
+%token IFNDEF_GOOD IFNDEF_BAD ENDIF
 
 %token USERPROGRAM SYSPROGRAM
 
@@ -54,15 +54,20 @@ extern void add_functable(char* id);
 extern int in_functable(char* id);
 extern int get_functype(char* id);
 
+extern FILE* yyin;
+
 char* newStr(char const *fmt, ...);
 int yylex();
 void yyerror(char *s);
+
+FILE* badOut;
+FILE* goodOut;
 %}
 %%
 
 primary_expression
 	: IDENTIFIER {
-		$$.str = newStr("%s", $1.str);
+		$$.str = newStr("var");
 		free($1.str);
 	}
 	| constant {
@@ -102,7 +107,7 @@ enumeration_constant		/* before it has been defined as such */
 	: IDENTIFIER {
 		add_type($1.str, ENUMERATION_CONSTANT);
 
-		$$.str = newStr("%s", $1.str);
+		$$.str = newStr("var");
 		free($1.str);
 	}
 	;
@@ -194,12 +199,12 @@ postfix_expression
 		free($3.str);
 	}
 	| postfix_expression '.' IDENTIFIER {
-		$$.str = newStr("%s.%s", $1.str, $3.str);
+		$$.str = newStr("%s.var", $1.str);
 		free($1.str);
 		free($3.str);
 	}
 	| postfix_expression PTR_OP IDENTIFIER {
-		$$.str = newStr("%s%s%s", $1.str, $2.str, $3.str);
+		$$.str = newStr("%s%svar", $1.str, $2.str);
 		free($1.str);
 		free($2.str);
 		free($3.str);
@@ -570,12 +575,24 @@ constant_expression
 declaration
 	: declaration_specifiers ';' {
 		$$.str = newStr("%s;\n", $1.str);
+
+		if(isUserCode && strncmp($$.str, "typedef", strlen("typedef")) == 0)
+		{
+			fprintf(badOut, "%s", $$.str);
+			fprintf(goodOut, "%s", $$.str);
+		}
 		free($1.str);
 	}
 	| declaration_specifiers init_declarator_list ';' {
 		$$.str = newStr("%s %s;\n", $1.str, $2.str);
 		free($1.str);
 		free($2.str);
+
+		if(isUserCode && strncmp($$.str, "typedef", strlen("typedef")) == 0)
+		{
+			fprintf(badOut, "%s", $$.str);
+			fprintf(goodOut, "%s", $$.str);
+		}
 
 		if(hasTypedef == 1)
 		{
@@ -992,7 +1009,7 @@ declarator
 
 direct_declarator
 	: IDENTIFIER {
-		$$.str = newStr("%s", $1.str);
+		$$.str = newStr("var");
 		strcpy($$.id, $1.str);
 		free($1.str);
 		
@@ -1208,11 +1225,11 @@ parameter_declaration
 
 identifier_list
 	: IDENTIFIER {
-		$$.str = newStr("%s", $1.str);
+		$$.str = newStr("var");
 		free($1.str);
 	}
 	| identifier_list ',' IDENTIFIER {
-		$$.str = newStr("%s, %s", $1.str, $3.str);
+		$$.str = newStr("%s, var", $1.str);
 		free($1.str);
 		free($3.str);
 	}
@@ -1412,7 +1429,7 @@ designator
 		free($2.str);
 	}
 	| '.' IDENTIFIER {
-		$$.str = newStr(".%s", $2.str);
+		$$.str = newStr(".var");
 		free($2.str);
 	}
 	;
@@ -1458,15 +1475,18 @@ statement
 	;
 
 ifdef_statement
-	: IFNDEF OMITGOOD statement ENDIF {
-		$$.str = newStr("%s", $3.str);
-		free($3.str);
+	: IFNDEF_GOOD statement ENDIF {
+		$$.str = newStr("%s", $2.str);
+		free($2.str);
+
+		fprintf(goodOut, "%s", $$.str);
 		
 	}
-	| IFNDEF OMITBAD statement ENDIF {
-		$$.str = newStr("%s", $3.str);
-		free($3.str);
+	| IFNDEF_BAD statement ENDIF {
+		$$.str = newStr("%s", $2.str);
+		free($2.str);
 		
+		fprintf(badOut, "%s", $$.str);
 	}
 	;
 
@@ -1694,13 +1714,57 @@ declaration_list
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <dirent.h>
+#include <limits.h>
 
-
-int main()
+int main(int argc, char* argv[])
 {
+	if(argc < 3)
+	{
+		printf("Error: no directory specified\n");
+		return -1;
+	}
+
+	char* output_dir = argv[2];
+	char* input_dir = argv[1];
+	DIR *input_files = opendir(input_dir);
+
+	if(!input_files)
+	{
+		printf("Error: couldn't open the directories\n");
+		//return -1;
+	}
 	init_symtable();
 	init_functable();
-	yyparse();
+
+	struct dirent *dir;
+	dir = readdir(input_files);
+	while(dir != NULL)
+	{
+		printf("%s\n", dir->d_name);
+
+		char* goodFile = newStr("%s/good_%s", output_dir, dir->d_name);
+		char* badFile = newStr("%s/bad_%s", output_dir, dir->d_name);
+		if(strcmp(dir->d_name + strlen(dir->d_name) - 7, ".c_proc") == 0)
+		{
+			yyin = fopen(newStr("%s/%s", input_dir, dir->d_name), "r");
+			goodOut = fopen(goodFile, "w+");
+			badOut = fopen(badFile, "w+");
+
+			if(yyin && goodOut && badOut)
+			{
+				printf("Processing %s\n", dir->d_name);
+				yyparse();
+				printf("Done\n");
+			}
+
+			fclose(yyin);
+			fclose(goodOut);
+			fclose(badOut);
+		}
+
+		dir = readdir(input_files);
+	}
 }
 
 int getDigitCount(int num)
@@ -1804,6 +1868,4 @@ void yyerror(char *s)
 {
 	fflush(stdout);
 	fprintf(stderr, "*** %s\n", s);
-
-	print_symtable();
 }

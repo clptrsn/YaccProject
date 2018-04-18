@@ -311,6 +311,4 @@ namespace simplecpp {
     SIMPLECPP_LIB std::string simplifyPath(std::string path);
 }
 
-extern "C" const char* preProcessFile(char *filename);
-
 #endif

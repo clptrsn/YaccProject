@@ -39,10 +39,9 @@ static int check_type(void);
 %}
 
 %%
-"#ifndef"               {  yylval.str = newStr("%s", yytext);return(IFNDEF); }
+"#ifndef OMITGOOD"               { yylval.str = newStr("%s", yytext);return(IFNDEF_GOOD); }
+"#ifndef OMITBAD"               { yylval.str = newStr("%s", yytext);return(IFNDEF_BAD); }
 "#endif"                {  yylval.str = newStr("%s", yytext);return(ENDIF); }
-"OMITGOOD"              { yylval.str = newStr("%s", yytext);return(OMITGOOD); }
-"OMITBAD"               { yylval.str = newStr("%s", yytext);return(OMITBAD); }
 #USERPROGRAM            { yylval.str = newStr("%s", yytext);return(USERPROGRAM); }
 #SYSPROGRAM             { yylval.str = newStr("%s", yytext);return(SYSPROGRAM); }
 #[^\n]*
