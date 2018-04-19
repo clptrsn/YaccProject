@@ -40,6 +40,7 @@ typedef struct {
 
 int hasTypedef = 0;
 int isUserCode = 1;
+char* last_translation_unit = NULL;
 
 extern void init_symtable();
 extern void add_type(char* id, int type);
@@ -53,6 +54,7 @@ extern void add_functype(char* id, int type);
 extern void add_functable(char* id);
 extern int in_functable(char* id);
 extern int get_functype(char* id);
+extern void print_functable();
 
 extern FILE* yyin;
 
@@ -1475,20 +1477,40 @@ statement
 	;
 
 ifdef_statement
-	: IFNDEF_GOOD block_item_list ENDIF {
+	: IFNDEF_GOOD ifdef_statement_list ENDIF {
 		$$.str = newStr("%s", $2.str);
 		free($2.str);
 
 		fprintf(goodOut, "%s", $$.str);
 		
 	}
-	| IFNDEF_BAD block_item_list ENDIF {
+	| IFNDEF_BAD ifdef_statement_list ENDIF {
 		$$.str = newStr("%s", $2.str);
 		free($2.str);
 		
 		fprintf(badOut, "%s", $$.str);
 	}
 	;
+
+ifdef_statement_list
+	: function_definition ifdef_statement_list {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);
+	}
+	| block_item ifdef_statement_list {
+		$$.str = newStr("%s%s", $1.str, $2.str);
+		free($1.str);
+		free($2.str);		
+	}
+	| function_definition {
+		$$.str = newStr("%s", $1.str);
+		free($1.str);
+	}
+	| block_item {
+		$$.str = newStr("%s", $1.str);
+		free($1.str);		
+	}
 
 labeled_statement
 	: IDENTIFIER ':' statement {
@@ -1648,12 +1670,15 @@ jump_statement
 translation_unit
 	: external_declaration {
 		$$.str = newStr("%s", $1.str);
+		last_translation_unit = newStr("%s", $1.str);
+		printf("%s", last_translation_unit);
 		free($1.str);
-		printf("%s\n", $$.str);
+
 	}
 	| translation_unit external_declaration {
 		$$.str = newStr("%s%s", $1.str, $2.str);
-		printf("%s\n", $2.str);
+		last_translation_unit = newStr("%s", $2.str);
+		printf("%s", last_translation_unit);
 		free($1.str);
 		free($2.str);
 	}
@@ -1734,13 +1759,13 @@ int main(int argc, char* argv[])
 		printf("Error: couldn't open the directories\n");
 		//return -1;
 	}
-	init_symtable();
-	init_functable();
 
 	struct dirent *dir;
 	dir = readdir(input_files);
 	while(dir != NULL)
 	{
+		init_symtable();
+		init_functable();
 		printf("%s\n", dir->d_name);
 
 		char* goodFile = newStr("%s/good_%s", output_dir, dir->d_name);
@@ -1867,5 +1892,11 @@ char* newStr(char const *fmt, ...)
 void yyerror(char *s)
 {
 	fflush(stdout);
-	fprintf(stderr, "*** %s\n", s);
+	if(last_translation_unit != NULL)
+		fprintf(stderr, "*** %s\n%s\n", s, last_translation_unit);
+	else
+		fprintf(stderr, "*** %s\n", s);
+
+	//print_symtable();
+	//print_functable();
 }

@@ -19,7 +19,7 @@ void print_symtable() {
 	struct symTableData* walk = SYMBOL_TABLE->head;
 	while(walk != NULL)
 	{
-		//printf("%s %d\n", walk->name, walk->type);
+		printf("%s %d\n", walk->name, walk->type);
 		walk = walk->next;
 	}
 }
