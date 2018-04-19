@@ -1475,14 +1475,14 @@ statement
 	;
 
 ifdef_statement
-	: IFNDEF_GOOD statement ENDIF {
+	: IFNDEF_GOOD block_item_list ENDIF {
 		$$.str = newStr("%s", $2.str);
 		free($2.str);
 
 		fprintf(goodOut, "%s", $$.str);
 		
 	}
-	| IFNDEF_BAD statement ENDIF {
+	| IFNDEF_BAD block_item_list ENDIF {
 		$$.str = newStr("%s", $2.str);
 		free($2.str);
 		
